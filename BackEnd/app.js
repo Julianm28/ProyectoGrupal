@@ -1,5 +1,7 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
+
 const connectDB = require('./config/db');
 require('dotenv').config();
 
@@ -13,5 +15,8 @@ app.use('/api/insumos', require('./routes/Insumo.routes'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor backend corriendo en puerto ${PORT}`);
+  console.log(` Servidor backend corriendo en puerto ${PORT}`);
 });
+
+const categoriaRoutes = require('./routes/categoriaRoutes');
+app.use('/api/categorias', categoriaRoutes);
