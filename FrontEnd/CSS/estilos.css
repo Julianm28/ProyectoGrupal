@@ -1,0 +1,57 @@
+/* Colores corporativos */
+body {
+  background-color: #f8f9fa; /* Fondo claro */
+  color: #212529; /* Texto gris oscuro para mejor lectura */
+  font-family: Arial, sans-serif;
+}
+
+h1, h2, h3 {
+  color: #0d6efd; /* Azul CCSS */
+}
+
+.navbar {
+  background-color: #0d6efd !important;
+}
+
+.navbar-brand, 
+.nav-link {
+  color: white !important;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+}
+
+/* Botones */
+.btn-primary {
+  background-color: #0d6efd;
+  border: none;
+}
+.btn-primary:hover {
+  background-color: #0b5ed7;
+}
+
+.btn-success {
+  background-color: #198754;
+  border: none;
+}
+.btn-success:hover {
+  background-color: #157347;
+}
+
+/* Tablas */
+.table th {
+  background-color: #0d6efd;
+  color: white;
+}
+
+/* Formularios */
+input, select, textarea {
+  border: 1px solid #ced4da;
+}
+
+/* Espaciado general */
+.container {
+  margin-top: 20px;
+}

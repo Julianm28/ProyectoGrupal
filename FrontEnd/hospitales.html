@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospitales</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">🏥 HospitalApp</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="hospitales.html">Hospitales</a></li>
+          <li class="nav-item"><a class="nav-link" href="insumos.html">Insumos</a></li>
+          <li class="nav-item"><a class="nav-link" href="solicitudes.html">Solicitudes</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Gestión de Hospitales</h1>
+    <form id="formHospital" class="mb-4">
+      <input type="text" class="form-control mb-2" placeholder="Código" id="codigo">
+      <input type="text" class="form-control mb-2" placeholder="Nombre" id="nombre">
+      <input type="text" class="form-control mb-2" placeholder="Dirección" id="direccion">
+      <input type="text" class="form-control mb-2" placeholder="Tipo" id="tipo">
+      <button class="btn btn-success" type="submit">Agregar Hospital</button>
+    </form>
+
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Tipo</th>
+        </tr>
+      </thead>
+      <tbody id="hospitalesBody"></tbody>
+    </table>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/hospitales.js"></script>
+</body>
+</html>
