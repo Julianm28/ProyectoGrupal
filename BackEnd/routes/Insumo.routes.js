@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const insumoCtrl = require('../controllers/insumo.controller');
+const insumoCtrl = require('../controller/insumo.controller');
 
 router.post('/', insumoCtrl.crearInsumo);
 router.get('/', insumoCtrl.obtenerInsumos);
