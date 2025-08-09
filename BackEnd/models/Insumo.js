@@ -3,23 +3,29 @@ const mongoose = require('mongoose');
 const InsumoSchema = new mongoose.Schema({
   nombre: {
     type: String,
-    required: [true, 'El nombre es obligatorio'],
-    trim: true
+    required: [true, 'El nombre del insumo es obligatorio']
+  },
+  codigo: {
+    type: String,
+    required: [true, 'El código es obligatorio'],
+    unique: true
   },
   categoria: {
-    type: String,
-    enum: ['medicamento', 'equipo'],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Categoria',
     required: [true, 'La categoría es obligatoria']
   },
-  stock: {
+  cantidad: {
     type: Number,
-    default: 0,
-    min: [0, 'El stock no puede ser negativo']
+    default: 0
   },
   stockMinimo: {
     type: Number,
-    default: 5,
-    min: [0, 'El stock mínimo no puede ser negativo']
+    default: 10
+  },
+  fechaIngreso: {
+    type: Date,
+    default: Date.now
   }
 }, { timestamps: true });
 

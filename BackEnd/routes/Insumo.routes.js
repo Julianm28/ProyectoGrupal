@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const insumoCtrl = require('../controller/insumo.controller');
 
-router.post('/', insumoCtrl.crearInsumo);
-router.get('/', insumoCtrl.obtenerInsumos);
-router.put('/:id', insumoCtrl.actualizarInsumo);
-router.delete('/:id', insumoCtrl.eliminarInsumo);
+const insumoController = require('../controller/insumo.controller');
+
+// Rutas de insumos
+router.post('/', insumoController.crearInsumo);
+router.get('/', insumoController.obtenerInsumos);
+router.get('/:id', insumoController.obtenerInsumoPorId);
+router.put('/:id', insumoController.actualizarInsumo);
+router.delete('/:id', insumoController.eliminarInsumo);
 
 module.exports = router;
