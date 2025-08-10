@@ -30,6 +30,10 @@ const SolicitudSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+      descripcion: {
+        type: String,
+        required: [true, "La descripción es obligatoria"]
+    },
   fechaAtencion: {
     type: Date
   }

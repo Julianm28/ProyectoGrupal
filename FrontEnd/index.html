@@ -3,28 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Sistema de Hospitales</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <title>Gestión Hospitalaria</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <header class="bg-light p-3 shadow-sm">
-        <div class="container d-flex justify-content-between align-items-center">
-            <h1 class="h3">Sistema de Hospitales</h1>
-            <nav>
-                <a href="index.html" class="btn btn-primary">Inicio</a>
-                <a href="solicitudes.html" class="btn btn-outline-primary">Solicitudes</a>
-            </nav>
-        </div>
-    </header>
+    <div class="container mt-4">
+        <h1 class="mb-4 text-primary">Gestión Hospitalaria</h1>
 
-    <main class="container mt-4">
-        <div class="text-center">
-            <h2>Bienvenido</h2>
-            <p>Seleccione una opción del menú para comenzar.</p>
+        <!-- Formulario Hospital -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                Registrar Hospital
+            </div>
+            <div class="card-body">
+                <form id="formHospital">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Código</label>
+                            <input type="text" id="codigoHospital" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" id="nombreHospital" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" id="direccionHospital" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo</label>
+                            <input type="text" id="tipoHospital" class="form-control" required>
+                        </div>
+                    </div>
+                    <button class="btn btn-success mt-3" type="submit">Guardar Hospital</button>
+                </form>
+            </div>
         </div>
-    </main>
 
-    <script src="js/main.js"></script>
+        <!-- Tabla Hospitales -->
+        <div class="card mb-5">
+            <div class="card-header bg-secondary text-white">
+                Lista de Hospitales
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Dirección</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHospitales"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Formulario Insumo -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                Registrar Insumo
+            </div>
+            <div class="card-body">
+                <form id="formInsumo">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" id="nombreInsumo" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Categoría</label>
+                            <select id="categoriaInsumo" class="form-control" required></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Stock</label>
+                            <input type="number" id="stockInsumo" class="form-control" required>
+                        </div>
+                    </div>
+                    <button class="btn btn-success mt-3" type="submit">Guardar Insumo</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla Insumos -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                Lista de Insumos
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaInsumos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script principal -->
+    <script src="main.js"></script>
 </body>
 </html>
