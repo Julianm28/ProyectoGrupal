@@ -15,6 +15,8 @@ const HospitalSchema = new mongoose.Schema({
     type: String,
     required: [true, 'La dirección es obligatoria']
   },
+   lat: { type: Number },  // <- para el mapa
+  lng: { type: Number },  // <- para el mapa
   telefono: {
     type: String,
     match: [/^[0-9]{8}$/, 'El teléfono debe tener 8 dígitos']

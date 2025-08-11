@@ -1,13 +1,14 @@
-const express = require('express');
-const router = express.Router();
+const router = require('express').Router();
+const ctrl = require('../controller/insumo.controller');
 
-const insumoController = require('../controller/insumo.controller');
+// Inventario
+router.post('/', ctrl.crearInsumo);
+router.get('/', ctrl.buscarInsumos);          // soporta ?q=, ?barcode=, ?codigo=, ?hospitalId=
+router.patch('/:id/stock', ctrl.actualizarStock);
 
-// Rutas de insumos
-router.post('/', insumoController.crearInsumo);
-router.get('/', insumoController.obtenerInsumos);
-router.get('/:id', insumoController.obtenerInsumoPorId);
-router.put('/:id', insumoController.actualizarInsumo);
-router.delete('/:id', insumoController.eliminarInsumo);
+// CRUD opcional
+router.get('/:id', ctrl.obtenerPorId);
+router.put('/:id', ctrl.actualizar);
+router.delete('/:id', ctrl.eliminar);
 
 module.exports = router;

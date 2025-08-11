@@ -1,40 +1,121 @@
-const Solicitud = require("../models/Solicitud");
+const Solicitud = require('../models/Solicitud');
 
-exports.crearSolicitud = async (req, res) => {
-    try {
-        const { hospital, descripcion } = req.body;
-        const nuevaSolicitud = new Solicitud({ hospital, descripcion });
-        await nuevaSolicitud.save();
-        res.status(201).json(nuevaSolicitud);
-    } catch (error) {
-        res.status(400).json({ mensaje: "Error al crear solicitud", error: error.message });
+// Permite filtrar por hospital vía ?hospitalId=...
+function hospitalScopeFromQuery(req) {
+  const { hospitalId } = req.query;
+  if (!hospitalId) return {};
+  return {
+    $or: [
+      { hospitalId },
+      { hospital: hospitalId },
+    ],
+  };
+}
+
+// Crear solicitud. Espera en body: { prioridad, items: [{supplyId, qty}], solicitanteId?, comentarios? }
+async function crearSolicitud(req, res) {
+  try {
+    const body = { ...req.body };
+    body.estado = body.estado || 'pendiente';
+    // Si no viene hospital en el body y pasas ?hospitalId=..., lo agregamos
+    if (!body.hospitalId && !body.hospital && req.query.hospitalId) {
+      body.hospitalId = req.query.hospitalId;
     }
-};
+    const doc = await Solicitud.create(body);
+    return res.status(201).json(doc);
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+}
 
-exports.obtenerSolicitudes = async (req, res) => {
-    try {
-        const solicitudes = await Solicitud.find()
-            .populate("hospital", "nombre codigo direccion tipo");
-        res.json(solicitudes);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al obtener solicitudes", error: error.message });
-    }
-};
+// Listar todas (opcionalmente filtra por hospital)
+async function listarTodas(req, res) {
+  try {
+    const docs = await Solicitud.find(hospitalScopeFromQuery(req)).sort('-createdAt');
+    return res.json(docs);
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+}
 
-exports.actualizarEstado = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { estado } = req.body;
+// "Mis" solicitudes: usa ?solicitanteId=... para filtrar
+async function misSolicitudes(req, res) {
+  try {
+    const { solicitanteId } = req.query;
+    if (!solicitanteId) return res.status(400).json({ message: 'Falta solicitanteId' });
+    const docs = await Solicitud.find({ solicitanteId }).sort('-createdAt');
+    return res.json(docs);
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+}
 
-        if (!["Pendiente", "Aprobada", "Rechazada"].includes(estado)) {
-            return res.status(400).json({ mensaje: "Estado inválido" });
-        }
+// Pendientes por hospital (opcionalmente usa ?hospitalId=...)
+async function pendientes(req, res) {
+  try {
+    const filtro = { ...hospitalScopeFromQuery(req), estado: 'pendiente' };
+    const docs = await Solicitud.find(filtro).sort('-createdAt');
+    return res.json(docs);
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+}
 
-        const solicitud = await Solicitud.findByIdAndUpdate(id, { estado }, { new: true });
-        if (!solicitud) return res.status(404).json({ mensaje: "Solicitud no encontrada" });
+// Aprobar/Rechazar/Entregar. Puedes enviar en body: { actorId?, comentarios? }
+async function aprobar(req, res) {
+  try {
+    const updates = { estado: 'aprobada' };
+    if (req.body?.actorId) updates.aprobadoPorId = req.body.actorId;
+    const doc = await Solicitud.findOneAndUpdate(
+      { _id: req.params.id, ...hospitalScopeFromQuery(req) },
+      updates,
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada' });
+    return res.json(doc);
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+}
 
-        res.json(solicitud);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al actualizar solicitud", error: error.message });
-    }
+async function rechazar(req, res) {
+  try {
+    const updates = { estado: 'rechazada' };
+    if (req.body?.actorId) updates.aprobadoPorId = req.body.actorId;
+    const doc = await Solicitud.findOneAndUpdate(
+      { _id: req.params.id, ...hospitalScopeFromQuery(req) },
+      updates,
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada' });
+    return res.json(doc);
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+}
+
+async function marcarEntregada(req, res) {
+  try {
+    const updates = { estado: 'entregada' };
+    if (req.body?.actorId) updates.entregadoPorId = req.body.actorId;
+    const doc = await Solicitud.findOneAndUpdate(
+      { _id: req.params.id, estado: 'aprobada', ...hospitalScopeFromQuery(req) },
+      updates,
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada o no está aprobada' });
+    return res.json(doc);
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+}
+
+module.exports = {
+  crearSolicitud,
+  listarTodas,
+  misSolicitudes,
+  pendientes,
+  aprobar,
+  rechazar,
+  marcarEntregada,
 };
