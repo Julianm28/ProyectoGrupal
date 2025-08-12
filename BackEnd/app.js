@@ -25,22 +25,34 @@ const setupRoutes = require("./routes/setup");
 
 const app = express();
 
+// ---------------------------
 // Middlewares globales
+// ---------------------------
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(morgan("dev"));
 
+// ---------------------------
 // Servir frontend
-app.use(express.static(path.join(__dirname, "FrontEnd")));
+// ---------------------------
+const frontEndPath = path.join(__dirname, "..", "FrontEnd");
+const loginPath = path.join(frontEndPath, "login.html");
 
-// Ruta inicial → login.html
+console.log("Buscando login.html en:", loginPath);
+
+// 1️⃣ Forzar que la ruta raíz siempre sirva login.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "FrontEnd", "login.html"));
+  res.sendFile(loginPath);
 });
 
+// 2️⃣ Luego servir archivos estáticos (CSS, JS, imágenes, otros HTML)
+app.use(express.static(frontEndPath));
+
+// ---------------------------
 // Montar rutas API
+// ---------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/hospitals", authenticate, authorize("admin"), hospitalRoutes);
 app.use("/api/categorias", authenticate, authorize("admin"), categoriaRoutes);
@@ -51,15 +63,16 @@ app.use("/api/analytics", authenticate, authorize("admin"), analyticsRoutes);
 app.use("/api/mapa", authenticate, authorize("admin"), mapaRoutes);
 app.use("/api/alertas", authenticate, authorize("admin"), alertasRoutes);
 app.use("/api/reportes", authenticate, authorize("admin", "bodega"), reportesRoutes);
-app.use("/api/setup", setupRoutes);
 
+// ---------------------------
 // Iniciar servidor
+// ---------------------------
 const PORT = process.env.PORT || 3000;
 connectDB()
   .then(() => {
-    app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+    app.listen(PORT, () => console.log(`✅ Servidor en puerto ${PORT}`));
     stockAlertJob.start();
   })
   .catch(err => {
-    console.error("Error al conectar DB:", err);
+    console.error("❌ Error al conectar DB:", err);
   });
