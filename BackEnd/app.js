@@ -3,10 +3,14 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 const connectDB = require("./config/db");
 const stockAlertJob = require("./jobs/stockAlertJobs");
 
-// rutas
+// Middlewares
+const { authenticate, authorize } = require("./middleware/authMiddleware");
+
+// Rutas API
 const authRoutes = require("./routes/auth");
 const hospitalRoutes = require("./routes/hospital");
 const categoriaRoutes = require("./routes/categoriaRoutes");
@@ -15,43 +19,47 @@ const solicitudRoutes = require("./routes/solicitud");
 const entregaRoutes = require("./routes/entrega");
 const analyticsRoutes = require("./routes/analytics");
 const mapaRoutes = require("./routes/mapa");
+const alertasRoutes = require("./routes/alertas");
 const reportesRoutes = require("./routes/reportes");
+const setupRoutes = require("./routes/setup");
 
 const app = express();
 
-const alertasRoutes = require('./routes/alertas');
-const reportesRoutes = require('./routes/reportes');
-const analyticsRoutes = require('./routes/analytics');
-
-const setupRoutes = require('./routes/setup');
-app.use('/api/setup', setupRoutes);
-
-app.use('/api/alertas', alertasRoutes);
-app.use('/api/reportes', reportesRoutes);
-app.use('/api/analytics', analyticsRoutes);
-
+// Middlewares globales
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(morgan("dev"));
 
-// montar rutas
-app.use("/api/auth", authRoutes);
-app.use("/api/hospitals", hospitalRoutes);
-app.use("/api/categorias", categoriaRoutes);
-app.use("/api/insumos", insumoRoutes);
-app.use("/api/solicitudes", solicitudRoutes);
-app.use("/api/entregas", entregaRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/mapa", mapaRoutes);
-app.use("/api/reportes", reportesRoutes);
+// Servir frontend
+app.use(express.static(path.join(__dirname, "FrontEnd")));
 
-// inicio servidor
-const PORT = process.env.PORT || 3000;
-connectDB().then(() => {
-  app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
-  stockAlertJob.start();
-}).catch(err => {
-  console.error("Error al conectar DB:", err);
+// Ruta inicial → login.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "FrontEnd", "login.html"));
 });
+
+// Montar rutas API
+app.use("/api/auth", authRoutes);
+app.use("/api/hospitals", authenticate, authorize("admin"), hospitalRoutes);
+app.use("/api/categorias", authenticate, authorize("admin"), categoriaRoutes);
+app.use("/api/insumos", authenticate, authorize("admin", "bodega"), insumoRoutes);
+app.use("/api/solicitudes", authenticate, authorize("medico", "bodega"), solicitudRoutes);
+app.use("/api/entregas", authenticate, authorize("bodega"), entregaRoutes);
+app.use("/api/analytics", authenticate, authorize("admin"), analyticsRoutes);
+app.use("/api/mapa", authenticate, authorize("admin"), mapaRoutes);
+app.use("/api/alertas", authenticate, authorize("admin"), alertasRoutes);
+app.use("/api/reportes", authenticate, authorize("admin", "bodega"), reportesRoutes);
+app.use("/api/setup", setupRoutes);
+
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+    stockAlertJob.start();
+  })
+  .catch(err => {
+    console.error("Error al conectar DB:", err);
+  });

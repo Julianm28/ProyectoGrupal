@@ -4,7 +4,7 @@ const router = express.Router();
 const Hospital = require('../models/Hospital');
 const Insumo = require('../models/Insumo');
 const User = require('../models/user');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware//authMiddleware');
 
 // Devuelve conteos para saber si hay que mostrar onboarding
 router.get('/status', authenticate, authorize('admin'), async (req, res) => {

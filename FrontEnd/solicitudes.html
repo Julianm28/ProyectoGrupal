@@ -1,167 +1,81 @@
+<!-- FrontEnd/solicitudes.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitudes de Insumos - CCSS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <title>Solicitudes - CCSS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/estilos.css">
 </head>
 <body>
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">CCSS Suministros</a>
-            <div>
-                <a href="index.html" class="btn btn-light me-2">Inicio</a>
-                <a href="solicitudes.html" class="btn btn-light">Solicitudes</a>
-            </div>
+  <div id="nav-placeholder"></div>
+  <div class="container-compact">
+    <div class="card p-4 mt-4">
+      <h3 class="page-title">Crear solicitud</h3>
+      <form id="form-solicitud" class="row g-2">
+        <div class="col-md-4">
+          <select id="sel-hospital" class="form-select"></select>
         </div>
-    </nav>
-
-    <!-- Contenido -->
-    <div class="container py-5">
-        <h1 class="text-center mb-4">Gestión de Solicitudes</h1>
-
-        <!-- Formulario de nueva solicitud -->
-        <div class="card p-4 mb-5">
-            <h4 class="mb-3">Nueva Solicitud</h4>
-            <form id="formSolicitud">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="hospital" class="form-label">Hospital</label>
-                        <select id="hospital" class="form-select" required></select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="insumo" class="form-label">Insumo</label>
-                        <select id="insumo" class="form-select" required></select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="cantidad" class="form-label">Cantidad</label>
-                        <input type="number" id="cantidad" class="form-control" min="1" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="prioridad" class="form-label">Prioridad</label>
-                        <select id="prioridad" class="form-select" required>
-                            <option value="">Seleccione...</option>
-                            <option value="Alta">Alta</option>
-                            <option value="Media">Media</option>
-                            <option value="Baja">Baja</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <button type="submit" class="btn btn-success w-100">Enviar Solicitud</button>
-                    </div>
-                </div>
-            </form>
+        <div class="col-md-4">
+          <select id="sel-insumo" class="form-select"></select>
         </div>
-
-        <!-- Tabla de solicitudes -->
-        <div class="card p-4">
-            <h4 class="mb-3">Solicitudes Registradas</h4>
-            <div class="table-responsive">
-                <table class="table table-bordered text-center align-middle">
-                    <thead>
-                        <tr>
-                            <th>Hospital</th>
-                            <th>Insumo</th>
-                            <th>Cantidad</th>
-                            <th>Prioridad</th>
-                            <th>Fecha</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaSolicitudes">
-                        <tr><td colspan="6">Cargando solicitudes...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="col-md-2">
+          <input id="s-cantidad" class="form-control" type="number" value="1" min="1">
         </div>
+        <div class="col-md-2">
+          <select id="s-prioridad" class="form-select">
+            <option value="rutinario">Rutinario</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+        <div class="col-12 mt-2">
+          <button class="btn btn-primary">Solicitar</button>
+        </div>
+      </form>
+
+      <hr>
+      <h5>Mis solicitudes recientes</h5>
+      <div id="mis-solicitudes"></div>
     </div>
+  </div>
 
-    <!-- Footer -->
-    <footer class="bg-light text-center py-3 mt-5">
-        <small>&copy; 2025 CCSS - Sistema de Gestión de Suministros Médicos</small>
-    </footer>
+  <script src="js/api.js"></script>
+  <script>
+    fetch('partials/navbar.html').then(r=>r.text()).then(t=>document.getElementById('nav-placeholder').innerHTML=t);
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="main.js"></script>
-    <script>
-        // Cargar hospitales e insumos
-        cargarOpcionesSelect("hospitales", "hospital", "Seleccione un hospital");
-        cargarOpcionesSelect("insumos", "insumo", "Seleccione un insumo");
+    async function cargarSelects() {
+      const hospitals = await apiFetch('/hospitales');
+      const insumos = await apiFetch('/insumos');
+      document.getElementById('sel-hospital').innerHTML = hospitals.map(h=>`<option value="${h._id}">${h.nombre}</option>`).join('');
+      document.getElementById('sel-insumo').innerHTML = insumos.map(i=>`<option value="${i._id}">${i.nombre}</option>`).join('');
+    }
 
-        // Listar solicitudes
-        async function listarSolicitudes() {
-            try {
-                const res = await fetch(`${API_URL}/solicitudes`);
-                const solicitudes = await res.json();
-                const tbody = document.getElementById("tablaSolicitudes");
-                tbody.innerHTML = "";
-                if (solicitudes.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='6'>No hay solicitudes registradas</td></tr>";
-                    return;
-                }
-                solicitudes.forEach(s => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${s.hospital?.nombre || "N/A"}</td>
-                            <td>${s.insumo?.nombre || "N/A"}</td>
-                            <td>${s.cantidad}</td>
-                            <td>${s.prioridad}</td>
-                            <td>${formatearFecha(s.createdAt)}</td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" onclick="eliminarSolicitud('${s._id}')">Eliminar</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (error) {
-                manejarErrorFetch(error);
-            }
-        }
+    document.getElementById('form-solicitud').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const body = {
+        hospitalId: document.getElementById('sel-hospital').value,
+        insumo: document.getElementById('sel-insumo').value,
+        cantidad: Number(document.getElementById('s-cantidad').value),
+        prioridad: document.getElementById('s-prioridad').value
+      };
+      try {
+        await apiFetch('/solicitudes', { method:'POST', body: JSON.stringify(body) });
+        alert('Solicitud enviada');
+        listaMis();
+      } catch (err) { alert(err.message || 'Error'); }
+    });
 
-        // Crear solicitud
-        document.getElementById("formSolicitud").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const datos = {
-                hospital: document.getElementById("hospital").value,
-                insumo: document.getElementById("insumo").value,
-                cantidad: parseInt(document.getElementById("cantidad").value),
-                prioridad: document.getElementById("prioridad").value
-            };
-            try {
-                const res = await fetch(`${API_URL}/solicitudes`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(datos)
-                });
-                if (!res.ok) return manejarErrorFetch(res);
-                mostrarAlerta("Solicitud creada con éxito");
-                document.getElementById("formSolicitud").reset();
-                listarSolicitudes();
-            } catch (error) {
-                manejarErrorFetch(error);
-            }
-        });
+    async function listaMis(){
+      try {
+        const all = await apiFetch('/solicitudes'); // backend debe filtrar por requester en controller.misSolicitudes
+        const mine = all.filter(s => s.requesterId === (localStorage.getItem('userId') || '')); // fallback si backend no filtra
+        // Si backend ya devuelve solo las del usuario, usa all directamente.
+        const arr = (mine.length ? mine : all).map(s=>`<div class="card p-2 mb-2"><b>${s.items[0].supplyName || 'Insumo'}</b> - Cant: ${s.items[0].qty} - Estado: ${s.status || s.estado || 'pendiente'}</div>`).join('');
+        document.getElementById('mis-solicitudes').innerHTML = arr || '<div class="text-muted">No hay solicitudes</div>';
+      } catch (err) { console.error(err); }
+    }
 
-        // Eliminar solicitud
-        async function eliminarSolicitud(id) {
-            confirmarAccion("¿Desea eliminar esta solicitud?", async () => {
-                try {
-                    const res = await fetch(`${API_URL}/solicitudes/${id}`, { method: "DELETE" });
-                    if (!res.ok) return manejarErrorFetch(res);
-                    mostrarAlerta("Solicitud eliminada correctamente");
-                    listarSolicitudes();
-                } catch (error) {
-                    manejarErrorFetch(error);
-                }
-            });
-        }
-
-        // Inicializar
-        listarSolicitudes();
-    </script>
+    cargarSelects(); listaMis();
+  </script>
 </body>
 </html>

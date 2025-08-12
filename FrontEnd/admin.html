@@ -1,60 +1,99 @@
-<!-- FrontEnd/admin.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>Admin - CCSS</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="CSS/estilos.css">
+  <meta charset="UTF-8">
+  <title>Panel Administrador - CCSS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body { background-color: #f4f6f9; }
+    nav { background-color: #004b87; }
+    nav a { color: white !important; }
+  </style>
 </head>
 <body>
-  <!-- navbar -->
-  <div id="nav-placeholder"></div>
+  <script>
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    if (!token || role !== "admin") window.location.href = "login.html";
+  </script>
 
-  <div class="container-compact">
-    <div class="card p-4 mt-4">
-      <h3 class="page-title">Panel Administrador</h3>
-      <p>Desde aquí gestionas hospitales, categorías, insumos y reportes.</p>
+  <nav class="navbar navbar-expand-lg navbar-dark px-3">
+    <a class="navbar-brand" href="#">CCSS - Admin</a>
+    <button class="btn btn-danger ms-auto" onclick="logout()">Salir</button>
+  </nav>
 
-      <div id="setup-warning" class="alert alert-warning d-none"></div>
+  <div class="container mt-4">
+    <h3>Gestión de Hospitales</h3>
+    <form id="hospitalForm" class="mb-3">
+      <input type="text" id="hospitalName" class="form-control mb-2" placeholder="Nombre del hospital" required>
+      <button class="btn btn-primary">Agregar Hospital</button>
+    </form>
+    <ul id="hospitalList" class="list-group mb-4"></ul>
 
-      <div class="row mt-3">
-        <div class="col-md-3 mb-3">
-          <a class="btn btn-primary w-100" href="hospitales.html">Gestionar Hospitales</a>
-        </div>
-        <div class="col-md-3 mb-3">
-          <a class="btn btn-primary w-100" href="categorias.html">Gestionar Categorías</a>
-        </div>
-        <div class="col-md-3 mb-3">
-          <a class="btn btn-primary w-100" href="insumos.html">Gestionar Insumos</a>
-        </div>
-        <div class="col-md-3 mb-3">
-          <a class="btn btn-primary w-100" href="alertas.html">Ver Alertas</a>
-        </div>
-      </div>
-    </div>
+    <h3>Categorías de Insumos</h3>
+    <form id="categoriaForm" class="mb-3">
+      <input type="text" id="categoriaName" class="form-control mb-2" placeholder="Nombre de categoría" required>
+      <button class="btn btn-primary">Agregar Categoría</button>
+    </form>
+    <ul id="categoriaList" class="list-group mb-4"></ul>
+
+    <h3>Alertas de Stock</h3>
+    <ul id="alertList" class="list-group"></ul>
   </div>
 
-  <script src="js/api.js"></script>
   <script>
-    // cargar navbar partial
-    fetch('partials/navbar.html').then(r=>r.text()).then(t=>document.getElementById('nav-placeholder').innerHTML=t);
+    const API = "/api";
 
-    // Comprobar estado del setup y redirigir al onboarding si hace falta
-    (async function(){
-      try {
-        const data = await apiFetch('/setup/status');
-        if (data.hospitals === 0 || data.insumos === 0) {
-          // Mostrar advertencia y redirigir a onboarding
-          document.getElementById('setup-warning').classList.remove('d-none');
-          document.getElementById('setup-warning').textContent = "Parece que este sistema no tiene hospitales o insumos registrados. Te guiaremos en un asistente paso a paso.";
-          // esperar 1.5s y redirigir
-          setTimeout(()=> window.location.href = 'onboarding.html', 1500);
-        }
-      } catch (err) {
-        console.error('No se pudo comprobar el estado del setup', err);
-      }
-    })();
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+
+    async function fetchHospitals() {
+      const res = await fetch(`${API}/hospitals`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      hospitalList.innerHTML = data.map(h => `<li class="list-group-item">${h.nombre}</li>`).join("");
+    }
+
+    async function fetchCategorias() {
+      const res = await fetch(`${API}/categorias`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      categoriaList.innerHTML = data.map(c => `<li class="list-group-item">${c.nombre}</li>`).join("");
+    }
+
+    async function fetchAlertas() {
+      const res = await fetch(`${API}/alertas`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      alertList.innerHTML = data.map(a => `<li class="list-group-item list-group-item-danger">${a.mensaje}</li>`).join("");
+    }
+
+    hospitalForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const nombre = hospitalName.value;
+      await fetch(`${API}/hospitals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre })
+      });
+      hospitalName.value = "";
+      fetchHospitals();
+    });
+
+    categoriaForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const nombre = categoriaName.value;
+      await fetch(`${API}/categorias`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre })
+      });
+      categoriaName.value = "";
+      fetchCategorias();
+    });
+
+    fetchHospitals();
+    fetchCategorias();
+    fetchAlertas();
   </script>
 </body>
 </html>

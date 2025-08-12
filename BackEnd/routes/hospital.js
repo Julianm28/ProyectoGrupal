@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const hospitalController = require('../controller/hospital.Controller');
-const { auth, permit } = require('../middleware/auth');
-
+const { authenticate, authorize } = require("../middleware/authMiddleware");
 // CRUD Hospital
-router.post('/', auth, permit('admin'), hospitalController.crearHospital);
+router.post('/', authenticate, authorize('admin'), hospitalController.crearHospital);
 router.get('/', hospitalController.listarHospitales);
 router.get('/:id', hospitalController.obtenerHospital);
-router.put('/:id', auth, permit('admin'), hospitalController.actualizarHospital);
-router.delete('/:id', auth, permit('admin'), hospitalController.eliminarHospital);
+router.put('/:id', authenticate, authorize('admin'), hospitalController.actualizarHospital);
+router.delete('/:id', authenticate, authorize('admin'), hospitalController.eliminarHospital);
 
 module.exports = router;
