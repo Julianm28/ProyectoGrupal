@@ -1,0 +1,146 @@
+<!-- FrontEnd/onboarding.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Onboarding - CCSS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/estilos.css">
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  <div class="container-compact">
+    <div class="card p-4 mt-4">
+      <h3 class="page-title">Asistente de configuración</h3>
+      <p>Vamos a crear lo esencial: Hospital, Categoría e Insumo. (Paso a paso)</p>
+
+      <div class="stepper mb-3">
+        <div id="step-1" class="step active">1. Hospital</div>
+        <div id="step-2" class="step">2. Categoría</div>
+        <div id="step-3" class="step">3. Insumo</div>
+        <div id="step-4" class="step">4. Finalizar</div>
+      </div>
+
+      <div id="step-content">
+        <!-- step 1 -->
+        <div id="content-1">
+          <h5>Agregar primer hospital</h5>
+          <form id="form-hospital">
+            <div class="mb-2">
+              <label class="form-label">Nombre</label>
+              <input class="form-control" id="h-nombre" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Dirección</label>
+              <input class="form-control" id="h-direccion">
+            </div>
+            <div class="mb-2 row">
+              <div class="col"><label class="form-label">Latitud</label><input id="h-lat" class="form-control"></div>
+              <div class="col"><label class="form-label">Longitud</label><input id="h-lng" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary">Crear hospital</button>
+          </form>
+        </div>
+
+        <!-- step 2 -->
+        <div id="content-2" style="display:none">
+          <h5>Crear categoría</h5>
+          <form id="form-categoria">
+            <div class="mb-2">
+              <label class="form-label">Nombre categoría</label>
+              <input class="form-control" id="c-nombre" required>
+            </div>
+            <button class="btn btn-primary">Crear categoría</button>
+            <button class="btn btn-link" id="skip-cat">Omitir</button>
+          </form>
+        </div>
+
+        <!-- step 3 -->
+        <div id="content-3" style="display:none">
+          <h5>Crear primer insumo</h5>
+          <form id="form-insumo">
+            <div class="mb-2">
+              <label class="form-label">Nombre insumo</label>
+              <input class="form-control" id="i-nombre" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Categoria (id)</label>
+              <input class="form-control" id="i-categoria">
+              <small class="text-muted">Si no conoces el id, deja vacío y lo asignaremos luego</small>
+            </div>
+            <div class="mb-2 row">
+              <div class="col"><label class="form-label">Stock inicial</label><input id="i-stock" class="form-control" type="number" value="10"></div>
+              <div class="col"><label class="form-label">Stock mínimo</label><input id="i-stockmin" class="form-control" type="number" value="5"></div>
+            </div>
+            <button class="btn btn-primary">Crear insumo</button>
+          </form>
+        </div>
+
+        <!-- step 4 -->
+        <div id="content-4" style="display:none">
+          <h5>¡Listo!</h5>
+          <p>Se completó la configuración inicial. Puedes continuar a la administración.</p>
+          <a class="btn btn-primary" href="admin.html">Ir al panel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // cargar navbar
+    fetch('partials/navbar.html').then(r=>r.text()).then(t=>document.getElementById('nav-placeholder').innerHTML=t);
+
+    // manejo stepper
+    function setStep(n){
+      document.querySelectorAll('.step').forEach((el,i)=>el.classList.toggle('active', i+1===n));
+      document.querySelectorAll('[id^="content-"]').forEach((el,i)=>el.style.display = (i+1===n)?'block':'none');
+    }
+
+    // Step 1: hospital
+    document.getElementById('form-hospital').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const body = {
+        nombre: document.getElementById('h-nombre').value,
+        direccion: document.getElementById('h-direccion').value,
+        lat: document.getElementById('h-lat').value || undefined,
+        lng: document.getElementById('h-lng').value || undefined
+      };
+      try {
+        await apiFetch('/hospitales', { method:'POST', body: JSON.stringify(body) });
+        setStep(2);
+      } catch (err) {
+        alert(err.message || 'Error creando hospital');
+      }
+    });
+
+    // Step 2: categoria
+    document.getElementById('form-categoria').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const body = { nombre: document.getElementById('c-nombre').value };
+      try {
+        await apiFetch('/categorias', { method:'POST', body: JSON.stringify(body) });
+        setStep(3);
+      } catch (err) { alert(err.message || 'Error creando categoría'); }
+    });
+    document.getElementById('skip-cat').addEventListener('click', (e)=>{ e.preventDefault(); setStep(3); });
+
+    // Step 3: insumo
+    document.getElementById('form-insumo').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const body = {
+        nombre: document.getElementById('i-nombre').value,
+        categoria: document.getElementById('i-categoria').value || undefined,
+        stock: Number(document.getElementById('i-stock').value) || 0,
+        stockMinimo: Number(document.getElementById('i-stockmin').value) || 0
+      };
+      try {
+        await apiFetch('/insumos', { method:'POST', body: JSON.stringify(body) });
+        setStep(4);
+      } catch (err) { alert(err.message || 'Error creando insumo'); }
+    });
+
+    setStep(1);
+  </script>
+</body>
+</html>

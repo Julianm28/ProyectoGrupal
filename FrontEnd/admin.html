@@ -1,0 +1,60 @@
+<!-- FrontEnd/admin.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin - CCSS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/estilos.css">
+</head>
+<body>
+  <!-- navbar -->
+  <div id="nav-placeholder"></div>
+
+  <div class="container-compact">
+    <div class="card p-4 mt-4">
+      <h3 class="page-title">Panel Administrador</h3>
+      <p>Desde aquí gestionas hospitales, categorías, insumos y reportes.</p>
+
+      <div id="setup-warning" class="alert alert-warning d-none"></div>
+
+      <div class="row mt-3">
+        <div class="col-md-3 mb-3">
+          <a class="btn btn-primary w-100" href="hospitales.html">Gestionar Hospitales</a>
+        </div>
+        <div class="col-md-3 mb-3">
+          <a class="btn btn-primary w-100" href="categorias.html">Gestionar Categorías</a>
+        </div>
+        <div class="col-md-3 mb-3">
+          <a class="btn btn-primary w-100" href="insumos.html">Gestionar Insumos</a>
+        </div>
+        <div class="col-md-3 mb-3">
+          <a class="btn btn-primary w-100" href="alertas.html">Ver Alertas</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // cargar navbar partial
+    fetch('partials/navbar.html').then(r=>r.text()).then(t=>document.getElementById('nav-placeholder').innerHTML=t);
+
+    // Comprobar estado del setup y redirigir al onboarding si hace falta
+    (async function(){
+      try {
+        const data = await apiFetch('/setup/status');
+        if (data.hospitals === 0 || data.insumos === 0) {
+          // Mostrar advertencia y redirigir a onboarding
+          document.getElementById('setup-warning').classList.remove('d-none');
+          document.getElementById('setup-warning').textContent = "Parece que este sistema no tiene hospitales o insumos registrados. Te guiaremos en un asistente paso a paso.";
+          // esperar 1.5s y redirigir
+          setTimeout(()=> window.location.href = 'onboarding.html', 1500);
+        }
+      } catch (err) {
+        console.error('No se pudo comprobar el estado del setup', err);
+      }
+    })();
+  </script>
+</body>
+</html>

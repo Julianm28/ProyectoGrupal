@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Insumos - CCSS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/estilos.css">
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  <div class="container-compact">
+    <div class="card p-4 mt-4">
+      <h3 class="page-title">Insumos</h3>
+
+      <form id="form-insumo" class="row g-2">
+        <div class="col-md-4"><input id="i-nombre" class="form-control" placeholder="Nombre" required></div>
+        <div class="col-md-3"><input id="i-categoria" class="form-control" placeholder="Categoria ID (opcional)"></div>
+        <div class="col-md-2"><input id="i-stock" class="form-control" type="number" value="10"></div>
+        <div class="col-md-2"><input id="i-stockmin" class="form-control" type="number" value="5"></div>
+        <div class="col-md-1"><button class="btn btn-primary w-100">Agregar</button></div>
+      </form>
+
+      <hr>
+      <div id="insumos-table"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    fetch('partials/navbar.html').then(r=>r.text()).then(t=>document.getElementById('nav-placeholder').innerHTML=t);
+
+    async function listar() {
+      try {
+        const insumos = await apiFetch('/insumos');
+        const rows = insumos.map(i=>`<tr>
+          <td>${i._id}</td>
+          <td>${i.nombre}</td>
+          <td>${i.categoria || ''}</td>
+          <td>${i.stock}</td>
+          <td>${i.stockMinimo || ''}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="del('${i._id}')">Eliminar</button></td>
+        </tr>`).join('');
+        document.getElementById('insumos-table').innerHTML = `<table class="table mt-3"><thead><tr><th>ID</th><th>Nombre</th><th>Categoria</th><th>Stock</th><th>Stock mínimo</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
+      } catch (err) { console.error(err); }
+    }
+
+    document.getElementById('form-insumo').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const body = {
+        nombre: document.getElementById('i-nombre').value,
+        categoria: document.getElementById('i-categoria').value || undefined,
+        stock: Number(document.getElementById('i-stock').value) || 0,
+        stockMinimo: Number(document.getElementById('i-stockmin').value) || 0
+      };
+      try { await apiFetch('/insumos', { method:'POST', body: JSON.stringify(body) }); listar(); } catch(e){ alert(e.message || 'Error'); }
+    });
+
+    async function del(id){ if(!confirm('Eliminar?')) return; await apiFetch(`/insumos/${id}`, { method:'DELETE' }); listar(); }
+
+    listar();
+  </script>
+</body>
+</html>

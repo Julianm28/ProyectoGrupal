@@ -1,0 +1,56 @@
+
+<nav class="navbar navbar-expand-lg navbar-ccss">
+  <div class="container-fluid container-compact">
+    <a class="navbar-brand brand" href="#">CCSS Inventarios</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto" id="menuLinks"></ul>
+      <div class="d-flex align-items-center">
+        <span id="userRole" class="me-3 text-white"></span>
+        <button class="btn btn-light btn-sm" id="btnLogout">Salir</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  (function(){
+    const role = localStorage.getItem('role') || 'invitado';
+    const menu = document.getElementById('menuLinks');
+    const userRole = document.getElementById('userRole');
+    userRole.textContent = role.toUpperCase();
+
+    const menus = {
+      admin: [
+        ['Hospitales','hospitales.html'],
+        ['Categorías','categorias.html'],
+        ['Insumos','insumos.html'],
+        ['Alertas','alertas.html'],
+        ['Reportes','reportes.html'],
+        ['Mapa','geo.html'],
+        ['Pronóstico','pronostico.html'],
+        ['Fraude','fraude.html']
+      ],
+      medico: [
+        ['Solicitudes','solicitudes.html'],
+        ['Historial','historial.html'],
+        ['Mapa','geo.html']
+      ],
+      bodega: [
+        ['Escaneo','escaneo.html'],
+        ['Aprobación','aprobacion.html'],
+        ['Mapa','geo.html']
+      ]
+    };
+
+    (menus[role] || []).forEach(it=>{
+      const li = document.createElement('li'); li.className='nav-item';
+      li.innerHTML = `<a class="nav-link" href="${it[1]}">${it[0]}</a>`;
+      menu.appendChild(li);
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', ()=>{
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+  })();
+</script>
