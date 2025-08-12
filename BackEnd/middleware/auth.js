@@ -1,26 +1,23 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
-function authenticate(req, res, next) {
-  const auth = req.headers.authorization;
-  const token = auth && auth.split(" ")[1];
-  if (!token) return res.status(401).json({ msg: "No autenticado" });
+function auth(req, res, next) {
+  const header = req.headers.authorization;
+  if(!header) return res.status(401).json({ msg: 'No autorizado' });
+  const token = header.split(' ')[1];
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
-  } catch (err) {
-    return res.status(403).json({ msg: "Token inválido" });
+  } catch (e) {
+    return res.status(401).json({ msg: 'Token inválido' });
   }
 }
 
-function authorize(roles = []) {
-  if (typeof roles === "string") roles = [roles];
+function permit(...roles) {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ msg: "No autenticado" });
-    if (roles.length && !roles.includes(req.user.role)) {
-      return res.status(403).json({ msg: "No autorizado" });
-    }
+    if(!req.user) return res.status(401).json({ msg: 'No autorizado' });
+    if(!roles.includes(req.user.role)) return res.status(403).json({ msg: 'Acceso denegado' });
     next();
   };
 }
 
-module.exports = { authenticate, authorize };
+module.exports = { auth, permit };

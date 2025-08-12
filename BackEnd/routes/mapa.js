@@ -1,13 +1,9 @@
-const express = require("express");
-const Hospital = require("../models/Hospital");
-const { authenticate } = require("../middleware/auth");
-const router = express.Router();
-
-
+const router = require('express').Router();
+const Hospital = require('../models/Hospital');
 
 // GET /api/mapa/hospitales
 // Devuelve hospitales con lat/lng (si no tienes coords, añade luego con un PUT normal).
-router.get('/hospitales', authenticate, async (req, res) => {
+router.get('/hospitales', async (req, res) => {
   try {
     const docs = await Hospital.find({}).lean();
     const data = docs.map(h => ({

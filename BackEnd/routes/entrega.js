@@ -1,23 +1,8 @@
-const express = require("express");
-const Entrega = require("../models/Entrega");
-const Insumo = require("../models/Insumo");
-const { authenticate, authorize } = require("../middleware/auth");
+const express = require('express');
 const router = express.Router();
+const entregaController = require('../controller/entrega.Controller');
 
-router.post("/in", authenticate, authorize("bodega"), async (req, res) => {
-  const { supplyId, hospitalId, qty, note } = req.body;
-  const m = new Entrega({ supplyId, hospitalId, qty, type: "in", userId: req.user.id, note });
-  await m.save();
-  await Insumo.findByIdAndUpdate(supplyId, { $inc: { currentStock: qty } });
-  res.json(m);
-});
-
-router.post("/out", authenticate, authorize("bodega"), async (req, res) => {
-  const { supplyId, hospitalId, qty, note } = req.body;
-  const m = new Entrega({ supplyId, hospitalId, qty, type: "out", userId: req.user.id, note });
-  await m.save();
-  await Insumo.findByIdAndUpdate(supplyId, { $inc: { currentStock: -qty } });
-  res.json(m);
-});
+router.post('/', entregaController.crearEntrega);
+router.get('/', entregaController.obtenerEntregas);
 
 module.exports = router;

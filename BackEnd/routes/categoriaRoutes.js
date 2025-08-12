@@ -1,17 +1,17 @@
-const express = require("express");
-const Categoria = require("../models/categoria");
-const { authenticate, authorize } = require("../middleware/auth");
+const express = require('express');
 const router = express.Router();
+const categoriaController = require('../controller/Categoria.Controller');
 
-router.post("/", authenticate, authorize("admin"), async (req, res) => {
-  const c = new Categoria(req.body);
-  await c.save();
-  res.json(c);
-});
+// Crear categoría
+router.post('/', categoriaController.crearCategoria);
 
-router.get("/", authenticate, async (req, res) => {
-  const list = await Categoria.find();
-  res.json(list);
-});
+// Listar categorías
+router.get('/', categoriaController.obtenerCategorias);
+
+// Actualizar categoría
+router.put('/:id', categoriaController.actualizarCategoria);
+
+// Eliminar categoría
+router.delete('/:id', categoriaController.eliminarCategoria);
 
 module.exports = router;

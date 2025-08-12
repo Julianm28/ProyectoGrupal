@@ -1,46 +1,35 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-const connectDB = require("./config/db");
-const stockAlertJob = require("./jobs/stockAlertJobs");
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
 
-// rutas
-const authRoutes = require("./routes/auth");
-const hospitalRoutes = require("./routes/hospital");
-const categoriaRoutes = require("./routes/categoriaRoutes");
-const insumoRoutes = require("./routes/Insumo.routes");
-const solicitudRoutes = require("./routes/solicitud");
-const entregaRoutes = require("./routes/entrega");
-const analyticsRoutes = require("./routes/analytics");
-const mapaRoutes = require("./routes/mapa");
-const reportesRoutes = require("./routes/reportes");
+
+
+require('dotenv').config();
+
+// Conexión a la base de datos
+const connectDB = require('./config/db');
+connectDB();
 
 const app = express();
 
+// Middlewares
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
-app.use(morgan("dev"));
+app.use(express.json()); // <-- esto debe ir ANTES de las rutas
 
-// montar rutas
-app.use("/api/auth", authRoutes);
-app.use("/api/hospitals", hospitalRoutes);
-app.use("/api/categorias", categoriaRoutes);
-app.use("/api/insumos", insumoRoutes);
-app.use("/api/solicitudes", solicitudRoutes);
-app.use("/api/entregas", entregaRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/mapa", mapaRoutes);
-app.use("/api/reportes", reportesRoutes);
+// Rutas
+app.use('/api/hospitales', require('./routes/hospital'));
+app.use('/api/insumos', require('./routes/Insumo.routes'));
+app.use('/api/categorias', require('./routes/categoriaRoutes'));
+app.use('/api/solicitudes', require('./routes/solicitud'));
+app.use('/api/entregas', require('./routes/entrega'));
 
-// inicio servidor
+
+const stockJobs = require('./jobs/stockAlertJobs');
+stockJobs.start();
+
+// Puerto
 const PORT = process.env.PORT || 3000;
-connectDB().then(() => {
-  app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
-  stockAlertJob.start();
-}).catch(err => {
-  console.error("Error al conectar DB:", err);
+app.listen(PORT, () => {
+  console.log(`✅ Servidor backend corriendo en puerto ${PORT}`);
 });
+
