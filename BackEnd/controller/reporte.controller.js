@@ -1,6 +1,8 @@
 const { Parser } = require('json2csv');
 const Solicitud = require('../models/Solicitud');
 const Insumo = require('../models/Insumo');
+const ExcelJS = require('exceljs');
+const puppeteer = require('puppeteer');
 
 // Utilidad: enviar CSV
 function sendCSV(res, filename, rows) {
@@ -40,6 +42,79 @@ async function exportSolicitudesCSV(req, res) {
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
+}
+
+
+async function exportSolicitudesPDF(req, res) {
+  const solicitudes = await Solicitud.find().populate('insumo').lean();
+  const html = `
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Solicitudes Reporte</title>
+        <style>
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+          th { background: #eee; }
+        </style>
+      </head>
+      <body>
+        <h1>Reporte de Solicitudes</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Solicitante</th>
+              <th>Hospital</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+              <th>Comentarios</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${solicitudes.map(s => `
+              <tr>
+                <td>${s._id}</td>
+                <td>${s.createdAt ? new Date(s.createdAt).toLocaleString() : ''}</td>
+                <td>${s.solicitanteId || ''}</td>
+                <td>${s.hospitalId || s.hospital || ''}</td>
+                <td>${s.prioridad || ''}</td>
+                <td>${s.estado || ''}</td>
+                <td>${s.comentarios || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.setContent(html, { waitUntil: 'networkidle0' });
+  const pdfBuffer = await page.pdf({ format: 'A4' });
+  await browser.close();
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.pdf');
+  res.send(pdfBuffer);
+}
+
+
+async function exportInsumosXLSX(req, res) {
+  const insumos = await Insumo.find().lean();
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Insumos');
+  sheet.columns = [
+    { header: 'Nombre', key: 'nombre', width: 40 },
+    { header: 'Código', key: 'codigo', width: 20 },
+    { header: 'Stock', key: 'stock', width: 10 },
+    { header: 'Stock Mínimo', key: 'stockMinimo', width: 12 },
+  ];
+  insumos.forEach(i => sheet.addRow({ nombre: i.nombre, codigo: i.codigo, stock: i.stock, stockMinimo: i.stockMinimo }));
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename=insumos.xlsx');
+  await workbook.xlsx.write(res);
+  res.end();
 }
 
 // GET /api/reportes/insumos?hospitalId=...

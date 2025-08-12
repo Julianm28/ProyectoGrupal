@@ -1,6 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+
+
+
 require('dotenv').config();
 
 // Conexión a la base de datos
@@ -20,6 +23,9 @@ app.use('/api/categorias', require('./routes/categoriaRoutes'));
 app.use('/api/solicitudes', require('./routes/solicitud'));
 app.use('/api/entregas', require('./routes/entrega'));
 
+
+const stockJobs = require('./jobs/stockAlertJobs');
+stockJobs.start();
 
 // Puerto
 const PORT = process.env.PORT || 3000;
