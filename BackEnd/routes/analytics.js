@@ -1,8 +1,18 @@
-const router = require('express').Router();
-const ctrl = require('../controller/analytics.controller');
+const express = require("express");
+const Insumo = require("../models/Insumo");
+const Solicitud = require("../models/Solicitud");
+const { authenticate, authorize } = require("../middleware/auth");
+const router = express.Router();
 
-// Pronóstico y fraude
-router.get('/pronostico', ctrl.pronosticoDemanda);
-router.get('/fraudes', ctrl.deteccionFraudes);
+// Ejemplo: top insumos solicitados (simple agregación)
+router.get("/top-supplies", authenticate, authorize(["admin"]), async (req, res) => {
+  const ag = await Solicitud.aggregate([
+    { $unwind: "$items" },
+    { $group: { _id: "$items.supplyId", totalQty: { $sum: "$items.qty" } } },
+    { $sort: { totalQty: -1 } },
+    { $limit: 10 }
+  ]);
+  res.json(ag);
+});
 
 module.exports = router;

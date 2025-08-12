@@ -1,42 +1,15 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const SolicitudSchema = new mongoose.Schema({
-  insumo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Insumo',
-    required: [true, 'Debe indicar el insumo solicitado']
-  },
-  cantidad: {
-    type: Number,
-    required: [true, 'Debe indicar la cantidad solicitada'],
-    min: [1, 'La cantidad debe ser al menos 1']
-  },
-  prioridad: {
-    type: String,
-    enum: ['Urgente', 'Rutinario'],
-    required: [true, 'Debe indicar la prioridad']
-  },
-  hospital: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Hospital',
-    required: [true, 'Debe indicar el hospital solicitante']
-  },
-  estado: {
-    type: String,
-    enum: ['Pendiente', 'Aprobada', 'Entregada', 'Rechazada'],
-    default: 'Pendiente'
-  },
-  fechaSolicitud: {
-    type: Date,
-    default: Date.now
-  },
-      descripcion: {
-        type: String,
-        required: [true, "La descripción es obligatoria"]
-    },
-  fechaAtencion: {
-    type: Date
-  }
+const solicitudSchema = new mongoose.Schema({
+  requesterId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  hospitalId: { type: mongoose.Schema.Types.ObjectId, ref: "Hospital", required: true },
+  items: [{
+    supplyId: { type: mongoose.Schema.Types.ObjectId, ref: "Insumo", required: true },
+    qty: { type: Number, required: true },
+    priority: { type: String, enum: ["urgente", "rutinario"], default: "rutinario" }
+  }],
+  status: { type: String, enum: ["pendiente","aprobada","rechazada","entregada"], default: "pendiente" },
+  approverId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Solicitud', SolicitudSchema);
+module.exports = mongoose.model("Solicitud", solicitudSchema);

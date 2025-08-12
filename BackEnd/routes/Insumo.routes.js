@@ -1,14 +1,31 @@
-const router = require('express').Router();
-const ctrl = require('../controller/insumo.controller');
+const express = require("express");
+const Insumo = require("../models/Insumo");
+const { authenticate, authorize } = require("../middleware/auth");
+const router = express.Router();
 
-// Inventario
-router.post('/', ctrl.crearInsumo);
-router.get('/', ctrl.buscarInsumos);          // soporta ?q=, ?barcode=, ?codigo=, ?hospitalId=
-router.patch('/:id/stock', ctrl.actualizarStock);
+router.post("/", authenticate, authorize("admin"), async (req, res) => {
+  const s = new Insumo(req.body);
+  await s.save();
+  res.json(s);
+});
 
-// CRUD opcional
-router.get('/:id', ctrl.obtenerPorId);
-router.put('/:id', ctrl.actualizar);
-router.delete('/:id', ctrl.eliminar);
+router.get("/", authenticate, async (req, res) => {
+  const { search, barcode } = req.query;
+  let query = {};
+  if (barcode) query.barcode = barcode;
+  if (search) query.name = { $regex: search, $options: "i" };
+  const list = await Insumo.find(query).populate("categoryId");
+  res.json(list);
+});
+
+router.get("/:id", authenticate, async (req, res) => {
+  const s = await Insumo.findById(req.params.id).populate("categoryId");
+  res.json(s);
+});
+
+router.put("/:id", authenticate, authorize("admin"), async (req, res) => {
+  const s = await Insumo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(s);
+});
 
 module.exports = router;
