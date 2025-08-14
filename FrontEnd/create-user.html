@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crear usuario - CCSS Inventario</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Evita meta CSP que bloquee inline si la tuvieras -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <style>
+    body { background-color: #f4f6f9; }
+    .box {
+      max-width: 520px; margin: 60px auto; padding: 24px; background: #fff;
+      border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h3 class="mb-3">Crear usuario (pruebas)</h3>
+    <form id="registerForm" novalidate>
+      <div class="mb-3">
+        <label class="form-label" for="nombre">Nombre</label>
+        <input id="nombre" class="form-control" type="text" placeholder="Nombre opcional" />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="email">Correo</label>
+        <input id="email" class="form-control" type="email" required autocomplete="username email" />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="password">Contraseña</label>
+        <input id="password" class="form-control" type="password" required autocomplete="new-password" />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="role">Rol</label>
+        <select id="role" class="form-select">
+          <option value="admin">admin</option>
+          <option value="medico" selected>medico</option>
+          <option value="bodega">bodega</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" type="submit">Crear</button>
+      <a class="btn btn-link" href="/login.html">Volver al login</a>
+    </form>
+    <div id="msg" class="mt-3"></div>
+  </div>
+
+  <script src="/js/create-user.js"></script>
+</body>
+</html>

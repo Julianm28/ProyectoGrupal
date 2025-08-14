@@ -1,3 +1,4 @@
+// BackEnd/app.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -7,7 +8,6 @@ const path = require("path");
 const connectDB = require("./config/db");
 const stockAlertJob = require("./jobs/stockAlertJobs");
 
-// Middlewares
 const { authenticate, authorize } = require("./middleware/authMiddleware");
 
 // Rutas API
@@ -25,35 +25,23 @@ const setupRoutes = require("./routes/setup");
 
 const app = express();
 
-// ---------------------------
-// Middlewares globales
-// ---------------------------
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(morgan("dev"));
 
-// ---------------------------
-// Servir frontend
-// ---------------------------
+// Frontend
 const frontEndPath = path.join(__dirname, "..", "FrontEnd");
 const loginPath = path.join(frontEndPath, "login.html");
+console.log("Sirviendo login desde:", loginPath);
 
-console.log("Buscando login.html en:", loginPath);
-
-// 1️⃣ Forzar que la ruta raíz siempre sirva login.html
-app.get("/", (req, res) => {
-  res.sendFile(loginPath);
-});
-
-// 2️⃣ Luego servir archivos estáticos (CSS, JS, imágenes, otros HTML)
+app.get("/", (req, res) => res.sendFile(loginPath));
 app.use(express.static(frontEndPath));
 
-// ---------------------------
-// Montar rutas API
-// ---------------------------
-app.use("/api/auth", authRoutes);
+// API
+app.use("/api/auth", authRoutes); // <- sin middleware
+
 app.use("/api/hospitals", authenticate, authorize("admin"), hospitalRoutes);
 app.use("/api/categorias", authenticate, authorize("admin"), categoriaRoutes);
 app.use("/api/insumos", authenticate, authorize("admin", "bodega"), insumoRoutes);
@@ -63,15 +51,13 @@ app.use("/api/analytics", authenticate, authorize("admin"), analyticsRoutes);
 app.use("/api/mapa", authenticate, authorize("admin"), mapaRoutes);
 app.use("/api/alertas", authenticate, authorize("admin"), alertasRoutes);
 app.use("/api/reportes", authenticate, authorize("admin", "bodega"), reportesRoutes);
+app.use("/api/setup", setupRoutes);
 
-// ---------------------------
-// Iniciar servidor
-// ---------------------------
 const PORT = process.env.PORT || 3000;
 connectDB()
   .then(() => {
     app.listen(PORT, () => console.log(`✅ Servidor en puerto ${PORT}`));
-    stockAlertJob.start();
+    if (stockAlertJob?.start) stockAlertJob.start();
   })
   .catch(err => {
     console.error("❌ Error al conectar DB:", err);

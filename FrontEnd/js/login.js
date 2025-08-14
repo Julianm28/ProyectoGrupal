@@ -1,33 +1,57 @@
-document.getElementById('loginForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
+// FrontEnd/js/login.js
+(function () {
+  const form = document.getElementById("loginForm");
+  if (!form) return;
 
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  try {
-    const res = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    const email = document.getElementById("email")?.value?.trim();
+    const password = document.getElementById("password")?.value || "";
 
-    if (!res.ok) {
-      const err = await res.json();
-      return alert(err.message || 'Error de inicio de sesión');
+    if (!email || !password) {
+      alert("Complete email y contraseña");
+      return;
     }
 
-    const data = await res.json();
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('role', data.user.role);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
 
-    if (data.user.role === 'admin') {
-      window.location.href = 'admin.html';
-    } else if (data.user.role === 'medico') {
-      window.location.href = 'medico.html';
-    } else if (data.user.role === 'bodega') {
-      window.location.href = 'bodega.html';
+      // Si no es 2xx, mostrar error legible
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const msg = errData?.msg || `Error de autenticación (${res.status})`;
+        alert(msg);
+        return;
+      }
+
+      const data = await res.json();
+      if (data?.token) {
+        // guardar token y role
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user?.role || "");
+
+        const role = data.user?.role;
+        if (role === "admin") {
+          window.location.href = "/admin.html";
+        } else if (role === "medico") {
+          window.location.href = "/medico.html";
+        } else if (role === "bodega") {
+          window.location.href = "/bodega.html";
+        } else {
+          // fallback
+          window.location.href = "/admin.html";
+        }
+      } else {
+        alert("Respuesta inválida del servidor");
+      }
+    } catch (err) {
+      console.error("Login fetch error:", err);
+      alert("No se pudo conectar con el servidor");
     }
-  } catch (error) {
-    alert('Error de conexión');
-  }
-});
+  });
+})();
