@@ -1,4 +1,3 @@
-// BackEnd/routes/Insumo.routes.js
 const router = require('express').Router();
 const {
   crearInsumo,
@@ -16,14 +15,19 @@ const { authenticate, authorize } = require('../middleware/authMiddleware');
 // Ruta pública (para médicos sin login si quieres)
 router.get('/public', listarInsumosPublic);
 
-// Ruta protegida para listar todos los insumos
-router.get('/', authenticate, authorize('admin', 'medico', 'bodega'), listarInsumos);
+// Buscar insumos con filtros (acepta ?q= o ?search=)
+router.get('/search', authenticate, authorize('admin', 'medico', 'bodega'), buscarInsumos);
+
+// Alias para permitir que "?search=" funcione igual que "/search"
+router.get('/', authenticate, authorize('admin', 'medico', 'bodega'), (req, res, next) => {
+  if (req.query.search || req.query.q || req.query.barcode || req.query.codigo) {
+    return buscarInsumos(req, res);
+  }
+  return listarInsumos(req, res);
+});
 
 // Crear insumo (solo admin y bodega)
 router.post('/', authenticate, authorize('admin', 'bodega'), crearInsumo);
-
-// Buscar insumos con filtros
-router.get('/search', authenticate, authorize('admin', 'medico', 'bodega'), buscarInsumos);
 
 // Actualizar stock
 router.patch('/:id/stock', authenticate, authorize('admin', 'bodega'), actualizarStock);

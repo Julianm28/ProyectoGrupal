@@ -1,4 +1,3 @@
-// BackEnd/controller/insumo.controller.js
 const Insumo = require('../models/Insumo');
 
 // Filtrado por hospital
@@ -27,7 +26,7 @@ async function crearInsumo(req, res) {
   }
 }
 
-// Listar insumos (protegido, todos los roles permitidos)
+// Listar insumos (protegido)
 async function listarInsumos(req, res) {
   try {
     const docs = await Insumo.find(hospitalScopeFromQuery(req)).populate('categoria');
@@ -37,7 +36,7 @@ async function listarInsumos(req, res) {
   }
 }
 
-// Listar insumos público (para médico sin token en /public)
+// Listar insumos público
 async function listarInsumosPublic(req, res) {
   try {
     const docs = await Insumo.find().populate('categoria');
@@ -50,7 +49,9 @@ async function listarInsumosPublic(req, res) {
 // Buscar insumos con filtros
 async function buscarInsumos(req, res) {
   try {
-    const { q, barcode, codigo, limit } = req.query;
+    // Aceptar "q" o "search" como nombre de parámetro
+    const q = req.query.q || req.query.search;
+    const { barcode, codigo, limit } = req.query;
     const filter = { ...hospitalScopeFromQuery(req) };
     const or = [];
 
@@ -64,8 +65,19 @@ async function buscarInsumos(req, res) {
     if (or.length) filter.$or = or;
 
     const lim = Math.min(Number(limit) || 50, 200);
-    const items = await Insumo.find(filter).limit(lim);
-    res.json(items);
+    const items = await Insumo.find(filter).limit(lim).populate('categoria');
+
+    // Normalizar stock
+    const data = items.map(i => ({
+      _id: i._id,
+      nombre: i.nombre,
+      categoria: i.categoria,
+      stock: i.stock ?? i.cantidad ?? 0,
+      codigo: i.codigo,
+      hospitalId: i.hospitalId
+    }));
+
+    res.json(data);
   } catch (e) {
     res.status(400).json({ message: e.message });
   }
@@ -105,9 +117,17 @@ async function actualizarStock(req, res) {
 // Obtener un insumo por ID
 async function obtenerPorId(req, res) {
   try {
-    const doc = await Insumo.findOne({ _id: req.params.id, ...hospitalScopeFromQuery(req) });
+    const doc = await Insumo.findOne({ _id: req.params.id, ...hospitalScopeFromQuery(req) }).populate('categoria');
     if (!doc) return res.status(404).json({ message: 'Insumo no encontrado' });
-    res.json(doc);
+
+    res.json({
+      _id: doc._id,
+      nombre: doc.nombre,
+      categoria: doc.categoria,
+      stock: doc.stock ?? doc.cantidad ?? 0,
+      codigo: doc.codigo,
+      hospitalId: doc.hospitalId
+    });
   } catch (e) {
     res.status(400).json({ message: e.message });
   }

@@ -29,7 +29,7 @@
 
     <!-- Solicitudes Pendientes -->
     <div class="card mb-4">
-      <div class="card-header bg-warning text-dark">Solicitudes Pendientes</div>
+      <div class="card-header bg-secondary text-white">Solicitudes Pendientes</div>
       <div class="card-body">
         <table class="table table-hover">
           <thead class="table-light">
@@ -57,14 +57,34 @@
           <label class="form-label">Fecha fin</label>
           <input type="date" id="fechaFin" class="form-control">
         </div>
-<div class="d-flex gap-2">
-  <button id="btnExportarPDF" class="btn btn-danger">
-    📄 Exportar PDF
-  </button>
-  <button id="btnExportarExcel" class="btn btn-success">
-    📊 Exportar Excel
-  </button>
-</div>
+        <div class="d-flex gap-2">
+          <button id="btnExportarPDF" class="btn btn-danger">📄 Exportar PDF</button>
+          <button id="btnExportarExcel" class="btn btn-success">📊 Exportar Excel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Resultados de Búsqueda -->
+  <div class="modal fade" id="modalResultados" tabindex="-1" aria-labelledby="modalResultadosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalResultadosLabel">Resultados de búsqueda</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Stock</th>
+              </tr>
+            </thead>
+            <tbody id="tablaResultados"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

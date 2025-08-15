@@ -19,12 +19,24 @@ async function buscarInsumo() {
     if (!res.ok) throw new Error('Error al buscar insumo');
 
     const insumos = await res.json();
+    const tbody = document.getElementById('tablaResultados');
+    tbody.innerHTML = '';
+
     if (!insumos.length) {
-      alert('No se encontraron insumos.');
-      return;
+      tbody.innerHTML = '<tr><td colspan="3" class="text-center">No se encontraron insumos</td></tr>';
+    } else {
+      insumos.forEach(i => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${i.nombre}</td>
+            <td>${i.categoria?.nombre || 'Sin categoría'}</td>
+            <td>${i.stock ?? 0}</td>
+          </tr>
+        `;
+      });
     }
-    let lista = insumos.map(i => `${i.nombre} (Stock: ${i.stock})`).join('\n');
-    alert(`Resultados encontrados:\n${lista}`);
+
+    new bootstrap.Modal(document.getElementById('modalResultados')).show();
   } catch (err) {
     console.error(err);
     alert(err.message);
@@ -61,11 +73,9 @@ async function cargarSolicitudes() {
       tbody.appendChild(tr);
     });
 
-    // Eventos sin inline handlers
     tbody.querySelectorAll('.btn-aprobar').forEach(btn => {
       btn.addEventListener('click', () => aprobarSolicitud(btn.dataset.id));
     });
-
     tbody.querySelectorAll('.btn-rechazar').forEach(btn => {
       btn.addEventListener('click', () => rechazarSolicitud(btn.dataset.id));
     });
@@ -79,7 +89,7 @@ async function aprobarSolicitud(id) {
   if (!confirm('¿Aprobar esta solicitud?')) return;
   try {
     const res = await fetch(`${API_URL}/solicitudes/${id}/aprobar`, {
-      method: 'POST', // corregido para coincidir con backend
+      method: 'POST',
       headers: { 'Authorization': `Bearer ${getToken()}` }
     });
     if (!res.ok) throw new Error('Error al aprobar solicitud');
@@ -95,7 +105,7 @@ async function rechazarSolicitud(id) {
   if (!confirm('¿Rechazar esta solicitud?')) return;
   try {
     const res = await fetch(`${API_URL}/solicitudes/${id}/rechazar`, {
-      method: 'POST', // corregido para coincidir con backend
+      method: 'POST',
       headers: { 'Authorization': `Bearer ${getToken()}` }
     });
     if (!res.ok) throw new Error('Error al rechazar solicitud');
