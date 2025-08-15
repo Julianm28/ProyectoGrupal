@@ -20,16 +20,30 @@
       <div class="card-header bg-primary text-white">Nueva Solicitud</div>
       <div class="card-body">
         <form id="form-solicitud">
-          <div class="mb-3">
-            <label for="insumo" class="form-label">Insumo</label>
-            <input id="insumo" name="insumo" class="form-control" list="lista-insumos" placeholder="Escribe para buscar un insumo..." required>
-<datalist id="lista-insumos"></datalist>
 
+
+          <div class="mb-3">
+  <label for="insumo" class="form-label">Insumo</label>
+  <input id="insumo" name="insumo" class="form-control" list="lista-insumos" placeholder="Escribe o selecciona un insumo..." required>
+  <datalist id="lista-insumos"></datalist>
+</div>
+
+
+          <div class="mb-3">
+            <label for="categoria" class="form-label">Categoría</label>
+            <select id="categoria" name="categoria" class="form-select">
+              <option value="">-- Selecciona una categoría --</option>
+            </select>
+            <small class="text-muted">
+              Solo es necesario elegir categoría si escribes un insumo nuevo.
+            </small>
           </div>
+
           <div class="mb-3">
             <label for="cantidad" class="form-label">Cantidad</label>
             <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
           </div>
+
           <div class="mb-3">
             <label for="prioridad" class="form-label">Prioridad</label>
             <select id="prioridad" name="prioridad" class="form-select" required>
@@ -38,17 +52,16 @@
             </select>
           </div>
 
-      
-<div class="mb-3">
-  <label for="hospital" class="form-label">Hospital</label>
-  <select id="hospital" name="hospital" class="form-select" required></select>
-</div>
-
+          <div class="mb-3">
+            <label for="hospital" class="form-label">Hospital</label>
+            <select id="hospital" name="hospital" class="form-select" required></select>
+          </div>
 
           <div class="mb-3">
             <label for="descripcion" class="form-label">Descripción</label>
             <textarea id="descripcion" name="descripcion" class="form-control" required></textarea>
           </div>
+
           <button type="submit" class="btn btn-success">Enviar Solicitud</button>
         </form>
       </div>

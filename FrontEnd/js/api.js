@@ -1,15 +1,11 @@
-// api.js
 export const API_URL = 'http://localhost:3000/api';
 
-// Función para obtener el token del almacenamiento local
+// Obtener token de localStorage
 export function getToken() {
     return localStorage.getItem('token');
 }
 
-/**
- * Hace un GET a la API con autenticación por token
- * @param {string} endpoint - Ruta de la API (ej: '/insumos/public')
- */
+// GET protegido (con token)
 export async function apiGet(endpoint) {
     const token = getToken();
     const res = await fetch(`${API_URL}${endpoint}`, {
@@ -27,11 +23,7 @@ export async function apiGet(endpoint) {
     return res.json();
 }
 
-/**
- * Hace un POST a la API con autenticación por token
- * @param {string} endpoint - Ruta de la API
- * @param {object} data - Datos a enviar
- */
+// POST protegido (con token)
 export async function apiPost(endpoint, data) {
     const token = getToken();
     const res = await fetch(`${API_URL}${endpoint}`, {

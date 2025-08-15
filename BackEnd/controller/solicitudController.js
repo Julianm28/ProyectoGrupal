@@ -1,17 +1,20 @@
 // /BackEnd/controller/solicitudController.js
 const mongoose = require('mongoose');
 const Solicitud = require('../models/Solicitud');
+const Insumo = require('../models/Insumo'); // necesario para crear insumos nuevos
 
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
-// Crear solicitud (rol: medico) con opción de insumo nuevo
-// Body esperado: { insumo, cantidad, prioridad, descripcion?, hospital }
 async function crearSolicitud(req, res) {
   try {
-    const { insumo, cantidad, prioridad, descripcion, hospital } = req.body;
-    const solicitanteId = req.user?.id; // viene del token
+    console.log("📥 Datos recibidos en crearSolicitud:", req.body);
+    console.log("👤 Usuario solicitante:", req.user);
 
+    const { insumo, cantidad, prioridad, descripcion, hospital, categoria } = req.body;
+    const solicitanteId = req.user?.id;
+
+    // Validaciones básicas
     if (!insumo || !cantidad || !prioridad || !hospital) {
       return res.status(400).json({ message: 'insumo, cantidad, prioridad y hospital son obligatorios' });
     }
@@ -30,13 +33,18 @@ async function crearSolicitud(req, res) {
 
     let insumoId = insumo;
 
-    // Si el insumo no es un ObjectId válido, lo creamos
+    // Si es un insumo nuevo, crearlo
     if (!isValidId(insumo)) {
+      if (!categoria || !isValidId(categoria)) {
+        return res.status(400).json({ message: 'Debe seleccionar una categoría válida para el nuevo insumo' });
+      }
       const Insumo = require('../models/Insumo');
       const nuevoInsumo = await Insumo.create({
         nombre: insumo,
-        stock: 0, // empieza en cero
-        stockMinimo: 0, // sin mínimo por defecto
+        categoria,
+        codigo: `AUTO-${Date.now()}`, // Código único autogenerado
+        stock: 0,
+        stockMinimo: 0
       });
       insumoId = nuevoInsumo._id;
     }
@@ -51,16 +59,16 @@ async function crearSolicitud(req, res) {
       estado: 'Pendiente'
     });
 
+    console.log("✅ Solicitud creada:", doc);
     return res.status(201).json(doc);
   } catch (e) {
-    console.error('Error en crearSolicitud:', e);
+    console.error('❌ Error en crearSolicitud:', e);
     return res.status(400).json({ message: e.message });
   }
 }
 
 
 // Listar solicitudes (admin/bodega/medico con filtros)
-// Query opcional: ?hospital=...&estado=Pendiente|Aprobada|Entregada|Rechazada&prioridad=Urgente|Rutinario
 async function listar(req, res) {
   try {
     const { hospital, estado, prioridad } = req.query;
@@ -97,7 +105,6 @@ async function listar(req, res) {
 }
 
 // Mis solicitudes (rol: medico)
-// Query: ?estado=... (opcional)
 async function misSolicitudes(req, res) {
   try {
     const solicitanteId = req.user?.id;
@@ -125,7 +132,7 @@ async function misSolicitudes(req, res) {
   }
 }
 
-// Pendientes (rol: bodega/admin) — opcionalmente filtrar por hospital ?hospital=...
+// Pendientes (rol: bodega/admin)
 async function pendientes(req, res) {
   try {
     const { hospital } = req.query;

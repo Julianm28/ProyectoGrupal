@@ -1,5 +1,4 @@
-// medico.js
-import { apiGet, apiPost } from './api.js';
+import { API_URL, apiGet, apiPost } from './api.js';
 
 function verificarSesion() {
     const token = localStorage.getItem('token');
@@ -13,28 +12,22 @@ function verificarSesion() {
 async function cargarInsumos() {
     try {
         const data = await apiGet('/insumos/public');
-        const select = document.getElementById('insumo');
-        select.innerHTML = '';
+        const datalist = document.getElementById('lista-insumos');
+        datalist.innerHTML = '';
 
-        if (!Array.isArray(data) || data.length === 0) {
-            const option = document.createElement('option');
-            option.textContent = 'No hay insumos disponibles';
-            option.disabled = true;
-            select.appendChild(option);
-            return;
+        if (Array.isArray(data) && data.length > 0) {
+            data.forEach(insumo => {
+                const option = document.createElement('option');
+                option.value = insumo.nombre;
+                datalist.appendChild(option);
+            });
         }
-
-        data.forEach(insumo => {
-            const option = document.createElement('option');
-            option.value = insumo._id; // ID real que espera el backend
-            option.textContent = `${insumo.nombre} - Stock: ${insumo.cantidad}`;
-            select.appendChild(option);
-        });
     } catch (err) {
         console.error('Error al cargar insumos', err);
         alert('Error al cargar insumos.');
     }
 }
+
 
 async function cargarHospitales() {
     try {
@@ -44,7 +37,7 @@ async function cargarHospitales() {
 
         data.forEach(hospital => {
             const option = document.createElement('option');
-            option.value = hospital._id; // IMPORTANTE: enviamos el ID
+            option.value = hospital._id;
             option.textContent = hospital.nombre;
             select.appendChild(option);
         });
@@ -54,39 +47,63 @@ async function cargarHospitales() {
     }
 }
 
+async function cargarCategorias() {
+    try {
+        const res = await fetch(`${API_URL}/categorias`); // público, sin token
+        if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+        const data = await res.json();
+
+        const select = document.getElementById('categoria');
+        select.innerHTML = '<option value="">-- Selecciona una categoría --</option>';
+
+        if (Array.isArray(data)) {
+            data.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat._id;
+                option.textContent = cat.nombre;
+                select.appendChild(option);
+            });
+        }
+    } catch (err) {
+        console.error('Error al cargar categorías', err);
+        alert('Error al cargar categorías.');
+    }
+}
 
 async function enviarSolicitud(e) {
     e.preventDefault();
     verificarSesion();
 
-    const insumo = document.getElementById('insumo').value;
+    const insumoNombre = document.getElementById('insumo').value.trim();
+    const categoria = document.getElementById('categoria').value;
     const cantidad = document.getElementById('cantidad').value;
     const prioridad = document.getElementById('prioridad').value;
-    const descripcion = document.getElementById('descripcion').value;
-    const hospital = document.getElementById('hospital').value; // ahora es un ObjectId
+    const descripcion = document.getElementById('descripcion').value.trim();
+    const hospital = document.getElementById('hospital').value;
 
-    if (!insumo || !cantidad || !prioridad || !descripcion || !hospital) {
+    if (!insumoNombre || !cantidad || !prioridad || !descripcion || !hospital) {
         alert('Todos los campos son obligatorios');
         return;
     }
 
     try {
         await apiPost('/solicitudes', {
-            insumo, // puede ser ID o nombre
+            insumo: insumoNombre,
+            categoria: categoria || undefined, // solo si es nuevo
             cantidad: parseInt(cantidad, 10),
             prioridad,
             descripcion,
-            hospital // es un ID válido
+            hospital
         });
 
         alert('Solicitud enviada correctamente');
         document.getElementById('form-solicitud').reset();
+        cargarHistorial();
     } catch (err) {
         console.error('Error al enviar solicitud', err);
         alert('Error al enviar solicitud. Revisa los datos.');
     }
 }
-
 
 async function cargarHistorial() {
     try {
@@ -102,7 +119,7 @@ async function cargarHistorial() {
         data.forEach(solicitud => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${solicitud.insumo?.nombre || '—'}</td>
+                <td>${solicitud.insumo?.nombre || solicitud.insumo || '—'}</td>
                 <td>${solicitud.cantidad}</td>
                 <td>${solicitud.prioridad}</td>
                 <td>${solicitud.estado}</td>
@@ -120,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarSesion();
     cargarInsumos();
     cargarHospitales();
+    cargarCategorias();
     cargarHistorial();
 
     const form = document.getElementById('form-solicitud');

@@ -1,4 +1,3 @@
-// BackEnd/app.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -25,6 +24,7 @@ const setupRoutes = require("./routes/setup");
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -54,21 +54,31 @@ app.use(express.static(frontEndPath));
 // API
 app.use("/api/auth", authRoutes); // login/registro sin autenticación
 
-// Protegidas por rol
+// Hospitales (protegidos por rol según hospitalRoutes)
 app.use("/api/hospitals", hospitalRoutes);
-app.use("/api/categorias", authenticate, authorize("admin"), categoriaRoutes);
 
-// Insumos: incluye /public (sin token) y protegidas
+// Categorías → GET público, CRUD protegido
+app.use("/api/categorias", categoriaRoutes);
+
+// Insumos (incluye /public sin token y otras rutas protegidas)
 app.use("/api/insumos", insumoRoutes);
 
+// Solicitudes (médico o bodega)
 app.use("/api/solicitudes", authenticate, authorize("medico", "bodega"), solicitudRoutes);
+
+// Entregas (bodega)
 app.use("/api/entregas", authenticate, authorize("bodega"), entregaRoutes);
+
+// Rutas admin
 app.use("/api/analytics", authenticate, authorize("admin"), analyticsRoutes);
 app.use("/api/mapa", authenticate, authorize("admin"), mapaRoutes);
 app.use("/api/alertas", authenticate, authorize("admin"), alertasRoutes);
 app.use("/api/reportes", authenticate, authorize("admin", "bodega"), reportesRoutes);
+
+// Setup inicial
 app.use("/api/setup", setupRoutes);
 
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 connectDB()
   .then(() => {

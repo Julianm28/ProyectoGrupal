@@ -8,7 +8,7 @@ body {
 h1, h2, h3 {
   color: #0d6efd; /* Azul CCSS */
 }
-
+ 
 .navbar {
   background-color: #0d6efd !important;
 }
@@ -29,15 +29,15 @@ h1, h2, h3 {
   border: none;
 }
 .btn-primary:hover {
-  background-color: #0b5ed7;
+  background-color: #0d6efd;
 }
 
 .btn-success {
-  background-color: #0977c0;
+  background-color: #0d6efd;
   border: none;
 }
 .btn-success:hover {
-  background-color: #2b1f9c;
+  background-color: #0d6efd;
 }
 
 /* Tablas */
