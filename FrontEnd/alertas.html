@@ -1,44 +1,47 @@
-<!-- FrontEnd/alertas.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>Alertas - CCSS</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="CSS/estilos.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alertas de Stock - CCSS</title>
+
+  <!-- Bootstrap Local -->
+  <link rel="stylesheet" href="./lib/bootstrap/css/bootstrap.min.css">
+
+  <!-- Estilos personalizados -->
+  <link rel="stylesheet" href="./CSS/estilos.css">
 </head>
 <body>
-  <div id="nav-placeholder"></div>
-  <div class="container-compact">
-    <div class="card p-4 mt-4">
-      <h3 class="page-title">Alertas</h3>
-      <div id="alerts-wrap"></div>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
+    <div class="container-fluid">
+      <a class="navbar-brand text-dark" href="admin.html">⬅ Volver al Panel</a>
+      <button class="btn btn-dark ms-auto" id="logoutBtn">Cerrar sesión</button>
     </div>
-  </div>
+  </nav>
 
-  <script src="js/api.js"></script>
-  <script>
-    fetch('partials/navbar.html').then(r=>r.text()).then(t=>document.getElementById('nav-placeholder').innerHTML=t);
+  <main class="container my-4">
+    <h1 class="mb-4">⚠ Alertas de Stock Mínimo</h1>
 
-    async function loadAlerts(){
-      try {
-        const alerts = await apiFetch('/alertas');
-        if(!alerts.length) { document.getElementById('alerts-wrap').innerHTML = '<div class="alert alert-info">No hay alertas.</div>'; return; }
-        document.getElementById('alerts-wrap').innerHTML = alerts.map(a=>`
-          <div class="card mb-2 p-2">
-            <div><strong>${a.insumoId?.nombre || 'Insumo'}</strong> - ${new Date(a.fecha).toLocaleString()}</div>
-            <div>${a.mensaje}</div>
-            <div class="mt-2"><button class="btn btn-sm btn-primary" onclick="mark('${a._id}')">Marcar como visto</button></div>
-          </div>
-        `).join('');
-      } catch (err) { console.error(err); document.getElementById('alerts-wrap').innerHTML = '<div class="alert alert-danger">Error cargando alertas</div>'; }
-    }
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="alertasTable">
+        <thead class="table-warning">
+          <tr>
+            <th>Insumo</th>
+            <th>Categoría</th>
+            <th>Stock Actual</th>
+            <th>Stock Mínimo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filas dinámicas -->
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-    async function mark(id){
-      try { await apiFetch(`/alertas/${id}/visto`, { method:'PUT' }); loadAlerts(); } catch(e){ alert('Error'); }
-    }
-
-    loadAlerts();
-  </script>
+  <!-- Bootstrap JS Local -->
+  <script src="./lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Lógica -->
+  <script type="module" src="./js/alertas.js"></script>
 </body>
 </html>

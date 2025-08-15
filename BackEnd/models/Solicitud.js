@@ -1,6 +1,11 @@
+// /BackEnd/models/Solicitud.js
 const mongoose = require('mongoose');
 
+const estados = ['Pendiente', 'Aprobada', 'Entregada', 'Rechazada'];
+const prioridades = ['Urgente', 'Rutinario'];
+
 const SolicitudSchema = new mongoose.Schema({
+  // Un (1) insumo por solicitud (simple y claro para el flujo Médico → Bodega)
   insumo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Insumo',
@@ -13,30 +18,41 @@ const SolicitudSchema = new mongoose.Schema({
   },
   prioridad: {
     type: String,
-    enum: ['Urgente', 'Rutinario'],
-    required: [true, 'Debe indicar la prioridad']
+    enum: prioridades,
+    required: [true, 'Debe indicar la prioridad (Urgente/Rutinario)']
   },
+  descripcion: {
+    type: String,
+    trim: true
+  },
+
+  // Hospital solicitante (obligatorio para trazabilidad)
   hospital: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Hospital',
     required: [true, 'Debe indicar el hospital solicitante']
   },
+
+  // Solicitante (médico)
+  solicitanteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Debe indicar el usuario solicitante']
+  },
+
+  // Estado del flujo
   estado: {
     type: String,
-    enum: ['Pendiente', 'Aprobada', 'Entregada', 'Rechazada'],
+    enum: estados,
     default: 'Pendiente'
   },
-  fechaSolicitud: {
-    type: Date,
-    default: Date.now
-  },
-      descripcion: {
-        type: String,
-        required: [true, "La descripción es obligatoria"]
-    },
-  fechaAtencion: {
-    type: Date
-  }
+
+  // Auditoría del flujo
+  aprobadoPorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  entregadoPorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+  fechaSolicitud: { type: Date, default: Date.now },
+  fechaAtencion: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Solicitud', SolicitudSchema);

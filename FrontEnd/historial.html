@@ -1,9 +1,11 @@
-<!-- FrontEnd/historial.html -->
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="utf-8"/><title>Historial - CCSS</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="CSS/estilos.css"></head>
+<head>
+  <meta charset="utf-8"/>
+  <title>Historial - CCSS</title>
+  <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/estilos.css">
+</head>
 <body>
   <div id="nav-placeholder"></div>
   <div class="container-compact">
@@ -13,18 +15,7 @@
     </div>
   </div>
 
-  <script src="js/api.js"></script>
-  <script>
-    fetch('partials/navbar.html').then(r=>r.text()).then(t=>document.getElementById('nav-placeholder').innerHTML=t);
-
-    async function loadHist(){
-      try {
-        const res = await apiFetch('/solicitudes'); // ideal: endpoint que devuelve las del usuario
-        document.getElementById('hist-wrap').innerHTML = res.map(s=>`<div class="card p-2 mb-2"><div><b>${s.items[0].supplyName || 'Insumo'}</b></div><div>Cant: ${s.items[0].qty} - Estado: ${s.status}</div><div class="text-muted">${new Date(s.createdAt || s.fecha || Date.now()).toLocaleString()}</div></div>`).join('');
-      } catch (err) { document.getElementById('hist-wrap').innerHTML = '<div class="alert alert-danger">Error cargando historial</div>'; console.error(err); }
-    }
-
-    loadHist();
-  </script>
+  <script src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/historial.js"></script>
 </body>
 </html>

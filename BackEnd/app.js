@@ -28,7 +28,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        objectSrc: ["'none'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      },
+    },
+  })
+);
 app.use(morgan("dev"));
 
 // Frontend
@@ -40,11 +52,15 @@ app.get("/", (req, res) => res.sendFile(loginPath));
 app.use(express.static(frontEndPath));
 
 // API
-app.use("/api/auth", authRoutes); // <- sin middleware
+app.use("/api/auth", authRoutes); // login/registro sin autenticación
 
-app.use("/api/hospitals", authenticate, authorize("admin"), hospitalRoutes);
+// Protegidas por rol
+app.use("/api/hospitals", hospitalRoutes);
 app.use("/api/categorias", authenticate, authorize("admin"), categoriaRoutes);
-app.use("/api/insumos", authenticate, authorize("admin", "bodega"), insumoRoutes);
+
+// Insumos: incluye /public (sin token) y protegidas
+app.use("/api/insumos", insumoRoutes);
+
 app.use("/api/solicitudes", authenticate, authorize("medico", "bodega"), solicitudRoutes);
 app.use("/api/entregas", authenticate, authorize("bodega"), entregaRoutes);
 app.use("/api/analytics", authenticate, authorize("admin"), analyticsRoutes);

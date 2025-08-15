@@ -2,64 +2,82 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Médico - CCSS</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+  <!-- Bootstrap Local -->
+  <link rel="stylesheet" href="./lib/bootstrap/css/bootstrap.min.css">
+
+  <!-- Estilos personalizados -->
+  <link rel="stylesheet" href="./css/estilos.css">
 </head>
 <body>
-  <script>
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    if (!token || role !== "medico") window.location.href = "login.html";
-  </script>
-
-  <nav class="navbar navbar-dark bg-primary px-3">
-    <a class="navbar-brand" href="#">CCSS - Médico</a>
-    <button class="btn btn-danger ms-auto" onclick="logout()">Salir</button>
-  </nav>
-
   <div class="container mt-4">
-    <h3>Solicitar Insumos</h3>
-    <form id="solicitudForm" class="mb-3">
-      <input type="text" id="insumo" class="form-control mb-2" placeholder="Nombre del insumo" required>
-      <select id="prioridad" class="form-select mb-2" required>
-        <option value="urgente">Urgente</option>
-        <option value="rutina">Rutina</option>
-      </select>
-      <button class="btn btn-success">Enviar Solicitud</button>
-    </form>
+    <h1 class="mb-4">Panel Médico</h1>
 
-    <h3>Historial de Solicitudes</h3>
-    <ul id="solicitudesList" class="list-group"></ul>
+    <!-- Formulario de Solicitud -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">Nueva Solicitud</div>
+      <div class="card-body">
+        <form id="form-solicitud">
+          <div class="mb-3">
+            <label for="insumo" class="form-label">Insumo</label>
+            <input id="insumo" name="insumo" class="form-control" list="lista-insumos" placeholder="Escribe para buscar un insumo..." required>
+<datalist id="lista-insumos"></datalist>
+
+          </div>
+          <div class="mb-3">
+            <label for="cantidad" class="form-label">Cantidad</label>
+            <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
+          </div>
+          <div class="mb-3">
+            <label for="prioridad" class="form-label">Prioridad</label>
+            <select id="prioridad" name="prioridad" class="form-select" required>
+              <option value="Urgente">Urgente</option>
+              <option value="Rutinario">Rutinario</option>
+            </select>
+          </div>
+
+      
+<div class="mb-3">
+  <label for="hospital" class="form-label">Hospital</label>
+  <select id="hospital" name="hospital" class="form-select" required></select>
+</div>
+
+
+          <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea id="descripcion" name="descripcion" class="form-control" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-success">Enviar Solicitud</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="card">
+      <div class="card-header bg-secondary text-white">Historial de Solicitudes</div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th>Cantidad</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-historial"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <script>
-    const API = "/api";
+  <!-- Bootstrap JS Local -->
+  <script src="./lib/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    function logout() {
-      localStorage.clear();
-      window.location.href = "login.html";
-    }
-
-    async function fetchSolicitudes() {
-      const res = await fetch(`${API}/solicitudes`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      solicitudesList.innerHTML = data.map(s => `<li class="list-group-item">${s.insumo} - ${s.estado}</li>`).join("");
-    }
-
-    solicitudForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const insumoNombre = insumo.value;
-      const prioridadVal = prioridad.value;
-      await fetch(`${API}/solicitudes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ insumo: insumoNombre, prioridad: prioridadVal })
-      });
-      insumo.value = "";
-      fetchSolicitudes();
-    });
-
-    fetchSolicitudes();
-  </script>
+  <!-- JS externo para lógica -->
+  <script type="module" src="./js/medico.js"></script>
 </body>
 </html>

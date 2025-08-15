@@ -2,98 +2,101 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Administrador - CCSS</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <style>
-    body { background-color: #f4f6f9; }
-    nav { background-color: #004b87; }
-    nav a { color: white !important; }
-  </style>
+
+  <!-- Bootstrap Local -->
+  <link rel="stylesheet" href="./lib/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./CSS/estilos.css">
 </head>
 <body>
-  <script>
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    if (!token || role !== "admin") window.location.href = "login.html";
-  </script>
-
-  <nav class="navbar navbar-expand-lg navbar-dark px-3">
-    <a class="navbar-brand" href="#">CCSS - Admin</a>
-    <button class="btn btn-danger ms-auto" onclick="logout()">Salir</button>
-  </nav>
-
   <div class="container mt-4">
-    <h3>Gestión de Hospitales</h3>
-    <form id="hospitalForm" class="mb-3">
-      <input type="text" id="hospitalName" class="form-control mb-2" placeholder="Nombre del hospital" required>
-      <button class="btn btn-primary">Agregar Hospital</button>
-    </form>
-    <ul id="hospitalList" class="list-group mb-4"></ul>
+    <h1 class="mb-4">Panel Administrador</h1>
 
-    <h3>Categorías de Insumos</h3>
-    <form id="categoriaForm" class="mb-3">
-      <input type="text" id="categoriaName" class="form-control mb-2" placeholder="Nombre de categoría" required>
-      <button class="btn btn-primary">Agregar Categoría</button>
-    </form>
-    <ul id="categoriaList" class="list-group mb-4"></ul>
+    <!-- Gestión de Hospitales -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">Registrar Hospital/Clínica</div>
+      <div class="card-body">
+        <form id="form-hospital">
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" id="nombre" name="nombre" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="ubicacion" class="form-label">Ubicación</label>
+            <input type="text" id="ubicacion" name="ubicacion" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-success">Registrar</button>
+        </form>
+      </div>
+    </div>
 
-    <h3>Alertas de Stock</h3>
-    <ul id="alertList" class="list-group"></ul>
+    <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">Hospitales Registrados</div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Ubicación</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-hospitales"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Clasificación de Insumos -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">Clasificar Insumos por Categorías</div>
+      <div class="card-body">
+        <form id="form-categoria">
+          <div class="mb-3">
+            <label for="categoria" class="form-label">Nombre de Categoría</label>
+            <input type="text" id="categoria" name="categoria" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-success">Agregar Categoría</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">Categorías Registradas</div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-categorias"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Alertas de Stock -->
+    <div class="card">
+      <div class="card-header bg-danger text-white">Alertas de Stock Bajo</div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th>Stock Actual</th>
+              <th>Stock Mínimo</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-alertas"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <script>
-    const API = "/api";
+  <!-- Bootstrap JS Local -->
+  <script src="./lib/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    function logout() {
-      localStorage.clear();
-      window.location.href = "login.html";
-    }
-
-    async function fetchHospitals() {
-      const res = await fetch(`${API}/hospitals`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      hospitalList.innerHTML = data.map(h => `<li class="list-group-item">${h.nombre}</li>`).join("");
-    }
-
-    async function fetchCategorias() {
-      const res = await fetch(`${API}/categorias`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      categoriaList.innerHTML = data.map(c => `<li class="list-group-item">${c.nombre}</li>`).join("");
-    }
-
-    async function fetchAlertas() {
-      const res = await fetch(`${API}/alertas`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      alertList.innerHTML = data.map(a => `<li class="list-group-item list-group-item-danger">${a.mensaje}</li>`).join("");
-    }
-
-    hospitalForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const nombre = hospitalName.value;
-      await fetch(`${API}/hospitals`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ nombre })
-      });
-      hospitalName.value = "";
-      fetchHospitals();
-    });
-
-    categoriaForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const nombre = categoriaName.value;
-      await fetch(`${API}/categorias`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ nombre })
-      });
-      categoriaName.value = "";
-      fetchCategorias();
-    });
-
-    fetchHospitals();
-    fetchCategorias();
-    fetchAlertas();
-  </script>
+  <!-- Lógica del Administrador -->
+  <script type="module" src="./js/admin.js"></script>
 </body>
 </html>

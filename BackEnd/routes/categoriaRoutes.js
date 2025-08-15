@@ -1,17 +1,19 @@
+// BackEnd/routes/categoriaRoutes.js
 const express = require('express');
 const router = express.Router();
 const categoriaController = require('../controller/Categoria.Controller');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
 
-// Crear categoría
-router.post('/', categoriaController.crearCategoria);
+// Crear categoría (solo admin)
+router.post('/', authenticate, authorize('admin'), categoriaController.crearCategoria);
 
-// Listar categorías
-router.get('/', categoriaController.obtenerCategorias);
+// Listar categorías (solo admin)
+router.get('/', authenticate, authorize('admin'), categoriaController.obtenerCategorias);
 
-// Actualizar categoría
-router.put('/:id', categoriaController.actualizarCategoria);
+// Actualizar categoría (solo admin)
+router.put('/:id', authenticate, authorize('admin'), categoriaController.actualizarCategoria);
 
-// Eliminar categoría
-router.delete('/:id', categoriaController.eliminarCategoria);
+// Eliminar categoría (solo admin)
+router.delete('/:id', authenticate, authorize('admin'), categoriaController.eliminarCategoria);
 
 module.exports = router;

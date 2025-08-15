@@ -1,37 +1,35 @@
-// Escaneo con BarcodeDetector nativo; fallback a input manual.
-async function initScanner(videoEl, onCode) {
-  const hasDetector = 'BarcodeDetector' in window;
-  let stream;
+import { API_URL, authFetch, logout } from './api.js';
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  logout();
+});
+
+const form = document.getElementById('createUserForm');
+const msgBox = document.getElementById('msgBox');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const nombre = document.getElementById('nombre').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const role = document.getElementById('role').value;
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    videoEl.srcObject = stream;
-    await videoEl.play();
-  } catch (e) {
-    console.warn('No camera access', e);
-  }
+    const res = await authFetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, email, password, role })
+    });
 
-  if (hasDetector) {
-    const detector = new BarcodeDetector({ formats: ['code_128', 'ean_13', 'ean_8', 'upc_e', 'upc_a', 'code_39', 'qr_code'] });
-    const loop = async () => {
-      if (videoEl.readyState >= 2) {
-        try {
-          const codes = await detector.detect(videoEl);
-          if (codes.length) {
-            onCode(codes[0].rawValue);
-            return;
-          }
-        } catch (e) {
-          console.warn('Detector error', e);
-        }
-      }
-      requestAnimationFrame(loop);
-    };
-    loop();
-  } else {
-    console.log('BarcodeDetector no soportado. Usa input manual.');
-  }
-}
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || 'Error al crear usuario');
+    }
 
-// Ejemplo de uso:
-// const video = document.getElementById('videoScan');
-// initScanner(video, code => { console.log('Código:', code); /* llamar a tu API */ });
+    msgBox.innerHTML = `<div class="alert alert-success">Usuario creado con éxito ✅</div>`;
+    form.reset();
+  } catch (err) {
+    msgBox.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  }
+});

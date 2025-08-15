@@ -1,109 +1,207 @@
+// /BackEnd/controller/solicitudController.js
+const mongoose = require('mongoose');
 const Solicitud = require('../models/Solicitud');
 
-// Permite filtrar por hospital vía ?hospitalId=...
-function hospitalScopeFromQuery(req) {
-  const { hospitalId } = req.query;
-  if (!hospitalId) return {};
-  return {
-    $or: [
-      { hospitalId },
-      { hospital: hospitalId },
-    ],
-  };
+function isValidId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
 }
-
-// Crear solicitud. Espera en body: { prioridad, items: [{supplyId, qty}], solicitanteId?, comentarios? }
+// Crear solicitud (rol: medico) con opción de insumo nuevo
+// Body esperado: { insumo, cantidad, prioridad, descripcion?, hospital }
 async function crearSolicitud(req, res) {
   try {
-    const body = { ...req.body };
-    body.estado = body.estado || 'pendiente';
-    // Si no viene hospital en el body y pasas ?hospitalId=..., lo agregamos
-    if (!body.hospitalId && !body.hospital && req.query.hospitalId) {
-      body.hospitalId = req.query.hospitalId;
+    const { insumo, cantidad, prioridad, descripcion, hospital } = req.body;
+    const solicitanteId = req.user?.id; // viene del token
+
+    if (!insumo || !cantidad || !prioridad || !hospital) {
+      return res.status(400).json({ message: 'insumo, cantidad, prioridad y hospital son obligatorios' });
     }
-    const doc = await Solicitud.create(body);
+
+    if (!isValidId(hospital)) {
+      return res.status(400).json({ message: 'hospital inválido' });
+    }
+
+    if (!solicitanteId || !isValidId(solicitanteId)) {
+      return res.status(400).json({ message: 'Usuario solicitante inválido' });
+    }
+
+    if (!['Urgente', 'Rutinario'].includes(prioridad)) {
+      return res.status(400).json({ message: 'prioridad debe ser Urgente o Rutinario' });
+    }
+
+    let insumoId = insumo;
+
+    // Si el insumo no es un ObjectId válido, lo creamos
+    if (!isValidId(insumo)) {
+      const Insumo = require('../models/Insumo');
+      const nuevoInsumo = await Insumo.create({
+        nombre: insumo,
+        stock: 0, // empieza en cero
+        stockMinimo: 0, // sin mínimo por defecto
+      });
+      insumoId = nuevoInsumo._id;
+    }
+
+    const doc = await Solicitud.create({
+      insumo: insumoId,
+      cantidad: parseInt(cantidad, 10),
+      prioridad,
+      descripcion: descripcion || '',
+      hospital,
+      solicitanteId,
+      estado: 'Pendiente'
+    });
+
     return res.status(201).json(doc);
   } catch (e) {
+    console.error('Error en crearSolicitud:', e);
     return res.status(400).json({ message: e.message });
   }
 }
 
-// Listar todas (opcionalmente filtra por hospital)
-async function listarTodas(req, res) {
+
+// Listar solicitudes (admin/bodega/medico con filtros)
+// Query opcional: ?hospital=...&estado=Pendiente|Aprobada|Entregada|Rechazada&prioridad=Urgente|Rutinario
+async function listar(req, res) {
   try {
-    const docs = await Solicitud.find(hospitalScopeFromQuery(req)).sort('-createdAt');
+    const { hospital, estado, prioridad } = req.query;
+    const filtro = {};
+
+    if (hospital) {
+      if (!isValidId(hospital)) return res.status(400).json({ message: 'hospital inválido' });
+      filtro.hospital = hospital;
+    }
+    if (estado) {
+      if (!['Pendiente', 'Aprobada', 'Entregada', 'Rechazada'].includes(estado)) {
+        return res.status(400).json({ message: 'estado inválido' });
+      }
+      filtro.estado = estado;
+    }
+    if (prioridad) {
+      if (!['Urgente', 'Rutinario'].includes(prioridad)) {
+        return res.status(400).json({ message: 'prioridad inválida' });
+      }
+      filtro.prioridad = prioridad;
+    }
+
+    const docs = await Solicitud
+      .find(filtro)
+      .populate('insumo', 'nombre codigoBarra')
+      .populate('hospital', 'nombre ubicacion')
+      .populate('solicitanteId', 'nombre email role')
+      .sort('-createdAt');
+
     return res.json(docs);
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
 }
 
-// "Mis" solicitudes: usa ?solicitanteId=... para filtrar
+// Mis solicitudes (rol: medico)
+// Query: ?estado=... (opcional)
 async function misSolicitudes(req, res) {
   try {
-    const { solicitanteId } = req.query;
-    if (!solicitanteId) return res.status(400).json({ message: 'Falta solicitanteId' });
-    const docs = await Solicitud.find({ solicitanteId }).sort('-createdAt');
+    const solicitanteId = req.user?.id;
+    if (!solicitanteId || !isValidId(solicitanteId)) {
+      return res.status(400).json({ message: 'Usuario inválido' });
+    }
+    const filtro = { solicitanteId };
+    const { estado } = req.query;
+    if (estado) {
+      if (!['Pendiente', 'Aprobada', 'Entregada', 'Rechazada'].includes(estado)) {
+        return res.status(400).json({ message: 'estado inválido' });
+      }
+      filtro.estado = estado;
+    }
+
+    const docs = await Solicitud
+      .find(filtro)
+      .populate('insumo', 'nombre codigoBarra')
+      .populate('hospital', 'nombre ubicacion')
+      .sort('-createdAt');
+
     return res.json(docs);
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
 }
 
-// Pendientes por hospital (opcionalmente usa ?hospitalId=...)
+// Pendientes (rol: bodega/admin) — opcionalmente filtrar por hospital ?hospital=...
 async function pendientes(req, res) {
   try {
-    const filtro = { ...hospitalScopeFromQuery(req), estado: 'pendiente' };
-    const docs = await Solicitud.find(filtro).sort('-createdAt');
+    const { hospital } = req.query;
+    const filtro = { estado: 'Pendiente' };
+    if (hospital) {
+      if (!isValidId(hospital)) return res.status(400).json({ message: 'hospital inválido' });
+      filtro.hospital = hospital;
+    }
+
+    const docs = await Solicitud
+      .find(filtro)
+      .populate('insumo', 'nombre codigoBarra')
+      .populate('hospital', 'nombre')
+      .populate('solicitanteId', 'nombre email')
+      .sort('fechaSolicitud');
+
     return res.json(docs);
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
 }
 
-// Aprobar/Rechazar/Entregar. Puedes enviar en body: { actorId?, comentarios? }
+// Aprobar (rol: bodega/admin)
 async function aprobar(req, res) {
   try {
-    const updates = { estado: 'aprobada' };
-    if (req.body?.actorId) updates.aprobadoPorId = req.body.actorId;
+    const id = req.params.id;
+    if (!isValidId(id)) return res.status(400).json({ message: 'id inválido' });
+
+    const updates = { estado: 'Aprobada', aprobadoPorId: req.user?.id, fechaAtencion: new Date() };
     const doc = await Solicitud.findOneAndUpdate(
-      { _id: req.params.id, ...hospitalScopeFromQuery(req) },
+      { _id: id, estado: 'Pendiente' },
       updates,
       { new: true }
     );
-    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada' });
+
+    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada o no está Pendiente' });
     return res.json(doc);
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
 }
 
+// Rechazar (rol: bodega/admin)
 async function rechazar(req, res) {
   try {
-    const updates = { estado: 'rechazada' };
-    if (req.body?.actorId) updates.aprobadoPorId = req.body.actorId;
+    const id = req.params.id;
+    if (!isValidId(id)) return res.status(400).json({ message: 'id inválido' });
+
+    const updates = { estado: 'Rechazada', aprobadoPorId: req.user?.id, fechaAtencion: new Date() };
     const doc = await Solicitud.findOneAndUpdate(
-      { _id: req.params.id, ...hospitalScopeFromQuery(req) },
+      { _id: id, estado: 'Pendiente' },
       updates,
       { new: true }
     );
-    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada' });
+
+    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada o no está Pendiente' });
     return res.json(doc);
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
 }
 
-async function marcarEntregada(req, res) {
+// Marcar entregada (rol: bodega)
+async function entregar(req, res) {
   try {
-    const updates = { estado: 'entregada' };
-    if (req.body?.actorId) updates.entregadoPorId = req.body.actorId;
+    const id = req.params.id;
+    if (!isValidId(id)) return res.status(400).json({ message: 'id inválido' });
+
+    const updates = { estado: 'Entregada', entregadoPorId: req.user?.id };
     const doc = await Solicitud.findOneAndUpdate(
-      { _id: req.params.id, estado: 'aprobada', ...hospitalScopeFromQuery(req) },
+      { _id: id, estado: 'Aprobada' },
       updates,
       { new: true }
     );
-    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada o no está aprobada' });
+
+    if (!doc) return res.status(404).json({ message: 'Solicitud no encontrada o no está Aprobada' });
     return res.json(doc);
   } catch (e) {
     return res.status(400).json({ message: e.message });
@@ -112,10 +210,10 @@ async function marcarEntregada(req, res) {
 
 module.exports = {
   crearSolicitud,
-  listarTodas,
+  listar,
   misSolicitudes,
   pendientes,
   aprobar,
   rechazar,
-  marcarEntregada,
+  entregar
 };
