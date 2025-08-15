@@ -7,7 +7,7 @@
 
   <!-- Bootstrap Local -->
   <link rel="stylesheet" href="./lib/bootstrap/css/bootstrap.min.css">
-  <link rel="stylesheet" href="./CSS/estilos.css">
+  <link rel="stylesheet" href="./css/estilos.css">
 </head>
 <body>
   <div class="container mt-4">
@@ -16,21 +16,23 @@
     <!-- Escaneo y búsqueda -->
     <div class="card mb-4">
       <div class="card-header bg-primary text-white">Actualizar Inventario</div>
-      <div class="card-body">
-        <div class="mb-3">
+      <div class="card-body row g-3">
+        <div class="col-md-8">
           <label for="buscar" class="form-label">Buscar insumo</label>
           <input type="text" id="buscar" class="form-control" placeholder="Nombre o código de barras">
         </div>
-        <button id="btnBuscar" class="btn btn-primary">Buscar</button>
+        <div class="col-md-4 d-flex align-items-end">
+          <button id="btnBuscar" class="btn btn-primary w-100">Buscar</button>
+        </div>
       </div>
     </div>
 
     <!-- Solicitudes Pendientes -->
-    <div class="card">
-      <div class="card-header bg-warning">Solicitudes Pendientes</div>
+    <div class="card mb-4">
+      <div class="card-header bg-warning text-dark">Solicitudes Pendientes</div>
       <div class="card-body">
-        <table class="table table-striped">
-          <thead>
+        <table class="table table-hover">
+          <thead class="table-light">
             <tr>
               <th>Insumo</th>
               <th>Cantidad</th>
@@ -40,6 +42,27 @@
           </thead>
           <tbody id="tabla-solicitudes"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Reportes -->
+    <div class="card">
+      <div class="card-header bg-success text-white">Reportes</div>
+      <div class="card-body row g-3">
+        <div class="col-md-5">
+          <label class="form-label">Fecha inicio</label>
+          <input type="date" id="fechaInicio" class="form-control">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Fecha fin</label>
+          <input type="date" id="fechaFin" class="form-control">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button id="btnExportarPDF" class="btn btn-danger w-100">PDF</button>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button id="btnExportarExcel" class="btn btn-success w-100">Excel</button>
+        </div>
       </div>
     </div>
   </div>

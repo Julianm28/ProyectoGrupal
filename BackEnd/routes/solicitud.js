@@ -1,4 +1,3 @@
-// /BackEnd/routes/solicitud.js
 const router = require('express').Router();
 const ctrl = require('../controller/solicitudController');
 const { authenticate, authorize } = require('../middleware/authMiddleware');

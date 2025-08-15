@@ -1,8 +1,14 @@
-const router = require('express').Router();
-const ctrl = require('../controller/reporte.controller');
+const express = require('express');
+const router = express.Router();
+const { authenticate, authorize } = require('../middleware/authMiddleware');
+const reportesCtrl = require('../controller/reporte.controller');
 
-// CSV de solicitudes e inventario
-router.get('/solicitudes', ctrl.exportSolicitudesCSV);
-router.get('/insumos', ctrl.exportInsumosCSV);
+// RUTA: /api/reportes/insumos-mas-solicitados
+router.get(
+  '/insumos-mas-solicitados',
+  authenticate,
+  authorize('admin', 'bodega'),
+  reportesCtrl.insumosMasSolicitados
+);
 
 module.exports = router;
